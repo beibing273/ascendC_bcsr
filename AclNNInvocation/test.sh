@@ -40,7 +40,7 @@ function main {
     cd $CURRENT_DIR
 
     # 定义输入输出目录
-    INPUTS_DIR="../inputs"
+    INPUTS_DIR="../temp_input"
     OUTPUT_DIR="../output"
     # INPUTS_DIR="/root/autodl-tmp/MatmulInvocationNeo_v1/inputs"
     # OUTPUT_DIR="../output"

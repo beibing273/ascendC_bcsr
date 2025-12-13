@@ -1,6 +1,0 @@
-Sample: bfwa62
-  aclnnBcsrSpmmCustom:
-    Run 1: 143.557704 ms
-  opRunner.RunOp:
-    Run 1: 632.246869 ms
-----------------------------------------

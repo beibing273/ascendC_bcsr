@@ -4,6 +4,7 @@
 /AclNNInvocation/build/
 /CooSpmmCustomOp/
 /BcsrSpmmCustomOp/
+/output/
 
 # Output directories
 /AclNNInvocation/output/

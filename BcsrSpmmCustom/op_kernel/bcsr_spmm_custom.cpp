@@ -33,6 +33,8 @@ public:
         this->lastMmadCubeBlockNum = lastMmadCubeBlockNum;
         this->mmadN = mmadN;
         this->lastKLength = lastKLength;
+        AscendC::printf("BcsrSpmmKernel Init: BlockIdx=%d, M=%d, K=%d, N=%d, mmadNum=%d, mmadN=%d\n", 
+            AscendC::GetBlockIdx(), M, K, N, mmadNum, mmadN);
         if (AscendC::GetBlockIdx() < formerNum) {
             this->rowWindowNum = formerLength;
             rowPtrGm.SetGlobalBuffer((__gm__ int32_t *)row_ptr + formerLength * AscendC::GetBlockIdx(), formerLength + 1);
@@ -49,12 +51,12 @@ public:
             );
         }
         colGm.SetGlobalBuffer((__gm__ int32_t *)col + rowPtrGm.GetValue(0), 
-            rowPtrGm.GetValue(formerLength) - rowPtrGm.GetValue(0)
+            rowPtrGm.GetValue(this->rowWindowNum) - rowPtrGm.GetValue(0)
         );
         valGm.SetGlobalBuffer((__gm__ aType *)val + CUBE_BLOCK_SIZE * rowPtrGm.GetValue(0),
-            CUBE_BLOCK_SIZE * (rowPtrGm.GetValue(formerLength) - rowPtrGm.GetValue(0))
+            CUBE_BLOCK_SIZE * (rowPtrGm.GetValue(this->rowWindowNum) - rowPtrGm.GetValue(0))
         );
-        bGm.SetGlobalBuffer((__gm__ bType *)b, (uint64_t)K * N * sizeof(bType));
+        bGm.SetGlobalBuffer((__gm__ bType *)b, (uint64_t)K * N);
 
         pipe.InitBuffer(inQueueA1, 1, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
         pipe.InitBuffer(inQueueA2, 1, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
@@ -66,9 +68,12 @@ public:
     __aicore__ inline void Process()
     {
         for (int32_t row = 0; row < rowWindowNum; row++) {
+            AscendC::printf("Blockidx=%d, Processing row window %d/%d\n", AscendC::GetBlockIdx(), row, rowWindowNum);
             // 行窗口中的每块
             for (int32_t i = 0; i < rowPtrGm.GetValue(row + 1) - rowPtrGm.GetValue(row); i++) {
                 int32_t col = colGm.GetValue(i);
+                AscendC::printf("  Processing block %d/%d, col block idx=%d\n", i, 
+                    rowPtrGm.GetValue(row + 1) - rowPtrGm.GetValue(row), col);
                 // B窗口行中的每个 mmad 块
                 for (int32_t j = 0; j < mmadNum; j++) {
                     // 因为是流水线式的，所以需要每次搬运 A 即使源地址一样
@@ -114,10 +119,10 @@ private:
 
         AscendC::DataCopy(a1Local, aGm, params);
         // if (row == 0 && i == 0) {
-        //     uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(16)};
-        //     AscendC::ShapeInfo shapeInfo(2, array); 
-        //     AscendC::DumpTensor(aGm, 0, 16*16, shapeInfo);
-        //     AscendC::DumpTensor(a1Local, 1, 16*16, shapeInfo);
+            uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(16)};
+            AscendC::ShapeInfo shapeInfo(2, array); 
+        // //     AscendC::DumpTensor(aGm, 0, 16*16, shapeInfo);
+            AscendC::DumpTensor(a1Local, 0, 16*16, shapeInfo);
         // }
         inQueueA1.EnQue<aType>(a1Local);
     }
@@ -125,33 +130,56 @@ private:
     // DataCopy API for each line of B
     // 如果 leading N 太大用不了 ND2NZ 随路转化
     __aicore__ inline void CopyInB(int32_t j, int32_t col) {
-        // col是A的block的列，对B来说是block的行
+        // col是A的列，对B来说是行
         // j 是B的block的列
         AscendC::LocalTensor<bType> b1Local = inQueueB1.AllocTensor<bType>();
         
         auto offset = col * N + j * this->mmadN;
         
-        AscendC::DataCopyParams params;
+        // AscendC::DataCopyParams params;
         // 有一小部分 padding 的数据是不需要的，Mmad 时会忽略
         // DataCopy的单位是32B，half类型就是16个元素
         // 逐行搬运所以count是1，len应当是32*2B/32B，这样还需要把B做32字节对齐
+        // params.blockCount = 1;
+        // params.blockLen = ((j == mmadNum - 1) ? lastMmadN : this->mmadN) * sizeof(bType) / 32;
+        // params.srcStride = 0;
+        // params.dstStride = 0;
+        // AscendC::printf("%d %d %d %d\n", params.blockCount, params.blockLen, params.srcStride, params.dstStride);
+        // for (int32_t i = 0; i < CUBE_BLOCK_K; i++) {
+        //     // Copy one line at a time
+        //     AscendC::DataCopy(b1Local[i * mmadN], this->bGm[offset + i * N], params);
+        // }
+
+        // 需要ND2NZ
+        // AscendC::Nd2NzParams params;
+        // params.ndNum = 1;
+        // params.nValue = CUBE_BLOCK_K;
+        // params.dValue = this->mmadN;
+        // params.srcNdMatrixStride = 0;
+        // params.srcDValue = N;
+        // params.dstNzC0Stride = 1;
+        // params.dstNzNStride = 1;
+        // params.dstNzMatrixStride = 1;
+
+        // AscendC::DataCopy(b1Local, this->bGm[offset], params);
+
+        // 手动ND2NZ
+        AscendC::DataCopyParams params;
         params.blockCount = 1;
-        params.blockLen = ((j == mmadNum - 1) ? lastMmadN : this->mmadN) * sizeof(bType) / 32;
+        params.blockLen = 16 * sizeof(bType) / 32;
         params.srcStride = 0;
         params.dstStride = 0;
-        // AscendC::printf("%d %d %d %d\n", params.blockCount, params.blockLen, params.srcStride, params.dstStride);
-        // TODO: WHY loop failed?
+        // 16*32 拆成左右两个16*16
         for (int32_t i = 0; i < CUBE_BLOCK_K; i++) {
-            // Copy one line at a time
-            AscendC::DataCopy(b1Local[i * mmadN], this->bGm[offset + i * N], params);
+            AscendC::DataCopy(b1Local[i * 16], this->bGm[offset + i * N], params);
+            AscendC::DataCopy(b1Local[(i + CUBE_BLOCK_K) * 16], this->bGm[offset + i * N + 16], params);
         }
 
-        if (j == 0 && col == 0) {
-             uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
-             AscendC::ShapeInfo shapeInfo(2, array); 
-             AscendC::DumpTensor(this->bGm, 0, 16*32, shapeInfo);
-             AscendC::DumpTensor(b1Local, 1, 16*32, shapeInfo);
-        }
+        AscendC::printf("Debug B Block: row %d, block col %d\n", col, j);
+        uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
+        AscendC::ShapeInfo shapeInfo(2, array); 
+        // AscendC::DumpTensor(this->bGm[offset], 0, 16*32, shapeInfo);
+        AscendC::DumpTensor(b1Local, 1, 16*32, shapeInfo);
         inQueueB1.EnQue<bType>(b1Local);
     }
 
@@ -165,6 +193,11 @@ private:
         params.srcStride = 1;
         params.ifTranspose = false;
         AscendC::LoadData(a2Local, a1Local, params);
+        // AscendC::printf("Debug SplitA:\n");
+
+        // uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(16)};
+        // AscendC::ShapeInfo shapeInfo(2, array); 
+        // AscendC::DumpTensor(a2Local, 0, 16*16, shapeInfo);
 
         inQueueA2.EnQue<aType>(a2Local);
         inQueueA1.FreeTensor(a1Local);
@@ -178,11 +211,18 @@ private:
 
         AscendC::LoadData2dTransposeParams params;
         params.startIndex = 0;
-        params.repeatTimes = (progress == mmadNum - 1) ? lastMmadCubeBlockNum : mmadCubeBlockNum;
+        // params.repeatTimes = (progress == mmadNum - 1) ? lastMmadCubeBlockNum : mmadCubeBlockNum;
+        params.repeatTimes = 2;
         params.srcStride = 1;
-        params.dstGap = sizeof(bType) == 2 ? 0 : 1;
+        // params.dstGap = sizeof(bType) == 2 ? 0 : 1;
+        params.dstGap = 0;
         params.dstFracGap = 0;
         AscendC::LoadDataWithTranspose(b2Local, b1Local, params);
+        // AscendC::printf("Debug SplitB: progress=%d\n", progress);
+        // uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
+        // AscendC::ShapeInfo shapeInfo(2, array); 
+        // // AscendC::DumpTensor(this->bGm[offset], 0, 16*32, shapeInfo);
+        // AscendC::DumpTensor(b2Local, 1, 16*32, shapeInfo);
 
         inQueueB1.FreeTensor(b1Local);
         inQueueB2.EnQue<bType>(b2Local);
@@ -200,8 +240,25 @@ private:
         // 可能可以通过给 bGm 更大的空间，padding 0 来解决
         params.k = CUBE_BLOCK_K;
         params.n = (progress == mmadNum - 1) ? lastMmadN : this->mmadN;
+
+        // if (progress == 0) {
+        // uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
+        // AscendC::ShapeInfo shapeInfo(2, array); 
+        // AscendC::DumpTensor(a2Local, 0, 16*32, shapeInfo);
+        // AscendC::DumpTensor(b2Local, 1, 16*32, shapeInfo);
+        // // AscendC::DumpTensor(c1Local, 2, 16*32, shapeInfo);
+        // }
+
         AscendC::Mmad(c1Local, a2Local, b2Local, params);
 
+        //debug output
+        AscendC::printf("Debug Compute: progress=%d\n", progress);
+        uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
+        AscendC::ShapeInfo shapeInfo(2, array); 
+        // AscendC::DumpTensor(a2Local, 0, 16*32, shapeInfo);
+        // AscendC::DumpTensor(b2Local, 1, 16*32, shapeInfo);
+        AscendC::DumpTensor(c1Local, 2, 16*32, shapeInfo);
+        
         outQueueCO1.EnQue<cType>(c1Local);
         inQueueA2.FreeTensor(a2Local);
         inQueueB2.FreeTensor(b2Local);
@@ -221,8 +278,14 @@ private:
         params.srcNdStride = 0;
         params.dstNdStride = 0;
 
-        // 默认使能 NZ -> ND
+        AscendC::SetAtomicAdd<cType>();
         AscendC::Fixpipe(cGm, c1Local, params);
+        AscendC::SetAtomicNone();
+        // AscendC::printf("Debug C Block: row %d, block col %d\n", row, progress);
+        uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
+        AscendC::ShapeInfo shapeInfo(2, array); 
+        // AscendC::DumpTensor(this->cGm, 3, 32*32, shapeInfo);
+        // AscendC::DumpTensor(c1Local, 1, 16*32, shapeInfo);
         outQueueCO1.FreeTensor(c1Local);
     }
 
