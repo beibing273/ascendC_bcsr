@@ -40,6 +40,8 @@ def verify_result(output, golden):
         real_index = different_element_indexes[index]
         golden_data = golden[real_index]
         output_data = output[real_index]
+        if golden_data == 0:
+            continue
         print(
                 "[%06d] expected: %-.9f, actual: %-.9f, rdiff: %-.6f" % 
                 (real_index, golden_data, output_data, 
