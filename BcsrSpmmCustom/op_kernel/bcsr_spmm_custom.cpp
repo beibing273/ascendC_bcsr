@@ -71,7 +71,9 @@ public:
             // AscendC::printf("Blockidx=%d, Processing row window %d/%d\n", AscendC::GetBlockIdx(), row, rowWindowNum);
             // 行窗口中的每块
             for (int32_t i = 0; i < rowPtrGm.GetValue(row + 1) - rowPtrGm.GetValue(row); i++) {
-                int32_t col = colGm.GetValue(i);
+                int32_t col = colGm.GetValue(
+                    rowPtrGm.GetValue(row) - rowPtrGm.GetValue(0) + i
+                );
                 // AscendC::printf("  Processing block %d/%d, col block idx=%d\n", i, 
                     // rowPtrGm.GetValue(row + 1) - rowPtrGm.GetValue(row), col);
                 // B窗口行中的每个 mmad 块
@@ -105,6 +107,7 @@ private:
     // 但是这里保留 Gm->A1->A2 的形式，方便后续扩展
     __aicore__ inline void CopyInA(int32_t row, int32_t i) {
         AscendC::LocalTensor<aType> a1Local = inQueueA1.AllocTensor<aType>();
+        //选择 对应的block
         auto aGm = this->valGm[(rowPtrGm.GetValue(row) - rowPtrGm.GetValue(0) + i) * CUBE_BLOCK_SIZE];
 
         AscendC::Nd2NzParams params;
@@ -113,7 +116,7 @@ private:
         params.dValue = CUBE_BLOCK_K;
         params.srcNdMatrixStride = 0;
         params.srcDValue = CUBE_BLOCK_K;
-        params.dstNzC0Stride = CUBE_BLOCK_M;
+        params.dstNzC0Stride = CUBE_BLOCK_M; //这个值暂时没用
         params.dstNzNStride = 1;
         params.dstNzMatrixStride = 0;
 
