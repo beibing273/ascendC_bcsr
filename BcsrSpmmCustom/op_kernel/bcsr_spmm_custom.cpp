@@ -192,7 +192,7 @@ private:
         // padParams.leftPadding = 0;
         // padParams.rightPadding = this->mmadN - this->lastMmadN;
 
-        for (int32_t i = 0; i < CUBE_BLOCK_K; i++) {
+        for (int32_t i = 0; i < CUBE_BLOCK_K; i++) {//一行行搬运
             // K不对齐
             if (col + i >= K) {
                 for (int32_t k = 0; k < this->mmadN / 16; k++) {
@@ -201,14 +201,19 @@ private:
                 continue;
             }
             for (int32_t k = 0; k < this->mmadN / 16; k++) {
+                //k=0或者1，差了256个数
+                //行数+1，只差了16个数，正确
                 AscendC::DataCopy(b1Local[(i + k * CUBE_BLOCK_K) * 16], this->bGm[offset + i * N + k * 16], params);
             }
             // N不对齐
-            if (j == mmadNum - 1 && this->lastMmadN < this->mmadN) {
+            if (j == mmadNum - 1 && this->lastMmadN < this->mmadN) {//最后一个mmad块且N不对齐
                 // for (int32_t k = 0; k < this->mmadN / 16; k++) {
                 //     AscendC::DataCopyPad(b1Local[(i + k * CUBE_BLOCK_K) * 16], this->bGm[offset + i * N + k * 16], params2, padParams);
                 // }
+                //32B对齐，half类型16个元素
                 AscendC::Duplicate(b1Local[(i + (this->lastMmadN / 16) * CUBE_BLOCK_K) * 16 + this->lastMmadN % 16], (bType)0, 16 - this->lastMmadN % 16);
+                //copy了一部分，这是为了后续兼容更大的MmadN，其他的越界的 整块儿的32B padding 0
+                // 为了保证 compute阶段不会读到垃圾数据(因为compute阶段是按mmadN整体读的)
                 for (int32_t k = this->lastMmadN / 16 + 1; k < this->mmadN / 16; k++) {
                     AscendC::Duplicate(b1Local[(i + k * CUBE_BLOCK_K) * 16], (bType)0, 16);
                 }
@@ -218,10 +223,10 @@ private:
         }
 
         if (col + CUBE_BLOCK_K - 1 >= K) {
-            AscendC::printf("Debug B Block: row %d, block col %d\n", col, j);
+            // AscendC::printf("Debug B Block: row %d, block col %d\n", col, j);
             uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
             AscendC::ShapeInfo shapeInfo(2, array); 
-            AscendC::DumpTensor(b1Local, 1, 16*32, shapeInfo);
+            // AscendC::DumpTensor(b1Local, 1, 16*32, shapeInfo);
         }
         inQueueB1.EnQue<bType>(b1Local);
     }
@@ -233,7 +238,8 @@ private:
         AscendC::LoadData2DParams params;
         // params.repeatTimes = CUBE_BLOCK_SIZE * sizeof(aType) / 512;
         params.repeatTimes = 1;
-        params.srcStride = 1;
+        params.srcStride = 1;//毕竟只有一块
+        params.dstGap = 0;
         params.ifTranspose = false;
         AscendC::LoadData(a2Local, a1Local, params);
         // AscendC::printf("Debug SplitA:\n");
@@ -254,9 +260,10 @@ private:
 
         AscendC::LoadData2dTransposeParams params;
         params.startIndex = 0;
+        //总共又多少个 mmadN 块
         params.repeatTimes = (progress == mmadNum - 1) ? lastMmadCubeBlockNum : mmadCubeBlockNum;
         // params.repeatTimes = 2;
-        params.srcStride = 1;
+        params.srcStride = 1; // 256个数字为单位
         params.dstGap = sizeof(bType) <= 2 ? 0 : 1;
         // params.dstGap = 0;
         params.dstFracGap = 0;
@@ -327,8 +334,8 @@ private:
         AscendC::Fixpipe(cGm, c1Local, params);
         AscendC::SetAtomicNone();
         // AscendC::printf("Debug C Block: row %d, block col %d\n", row, progress);
-        uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
-        AscendC::ShapeInfo shapeInfo(2, array); 
+        // uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
+        // AscendC::ShapeInfo shapeInfo(2, array); 
         // AscendC::DumpTensor(this->cGm, 3, 32*32, shapeInfo);
         // AscendC::DumpTensor(c1Local, 1, 16*32, shapeInfo);
         outQueueCO1.FreeTensor(c1Local);
