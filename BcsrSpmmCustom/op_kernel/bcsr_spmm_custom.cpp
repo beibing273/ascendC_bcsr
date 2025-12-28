@@ -76,16 +76,19 @@ public:
                 );
                 // AscendC::printf("  Processing block %d/%d, col block idx=%d\n", i, 
                     // rowPtrGm.GetValue(row + 1) - rowPtrGm.GetValue(row), col);
+                AscendC::LocalTensor<aType> a2Local = LoadA2Once(row, i);
                 // B窗口行中的每个 mmad 块
                 for (int32_t j = 0; j < mmadNum; j++) {
                     // 因为是流水线式的，所以需要每次搬运 A 即使源地址一样
-                    CopyInA(row, i);
+                    // CopyInA(row, i);
                     CopyInB(j, col);
-                    SplitA();
+                    // SplitA();
                     SplitB(j);
-                    Compute(j);
+                    // Compute(j);
+                    ComputeReuseA(a2Local, j);
                     CopyOut(row, j);
                 }
+                inQueueA2.FreeTensor(a2Local);
             }
         }
     }
@@ -356,6 +359,31 @@ private:
     uint32_t lastMmadCubeBlockNum;
     uint32_t mmadN;
     uint32_t lastKLength;
+    
+    __aicore__ inline AscendC::LocalTensor<aType> LoadA2Once(int32_t row, int32_t i) {
+        // GM -> A1 (ND2NZ) + A1 -> A2 (LoadData)
+        CopyInA(row, i);
+        SplitA();
+        // 取出 A2，交给调用者在 j 循环里复用
+        AscendC::LocalTensor<aType> a2Local = inQueueA2.DeQue<aType>();
+        return a2Local;
+    }
+    
+    __aicore__ inline void ComputeReuseA(const AscendC::LocalTensor<aType> &a2Local, int32_t progress) {
+        AscendC::LocalTensor<bType> b2Local = inQueueB2.DeQue<bType>();
+        AscendC::LocalTensor<cType> c1Local = outQueueCO1.AllocTensor<cType>();
+
+        AscendC::MmadParams params;
+        params.m = CUBE_BLOCK_M;
+        params.k = CUBE_BLOCK_K;
+        params.n = (progress == mmadNum - 1) ? lastMmadN : this->mmadN;
+
+        AscendC::Mmad(c1Local, a2Local, b2Local, params);
+
+        outQueueCO1.EnQue<cType>(c1Local);
+        inQueueB2.FreeTensor(b2Local);
+    }
+
 };
 
 extern "C" __global__ __aicore__ void bcsr_spmm_custom(

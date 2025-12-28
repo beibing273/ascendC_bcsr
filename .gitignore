@@ -58,3 +58,6 @@ CTestTestfile.cmake
 .*.bak
 *.tmp
 *.temp
+
+# output
+output*/
