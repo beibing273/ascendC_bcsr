@@ -6,7 +6,7 @@ std::map<std::string, std::chrono::time_point<std::chrono::high_resolution_clock
 std::map<std::string, std::vector<double>> Timer::timings;
 
 void Log::Write(const std::string& category, const std::string& sampleName, const std::map<std::string, std::vector<double>>& timings,int mode) {
-    std::string filePath = "../output/" + category + ".txt";
+    std::string filePath = "../output_loadAonce/" + category + ".txt";
     std::ofstream outFile(filePath, std::ios::app);
     time_t time_handle=time(nullptr);
     std::tm* local_time=localtime(&time_handle);

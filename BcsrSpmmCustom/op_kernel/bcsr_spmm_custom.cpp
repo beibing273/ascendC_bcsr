@@ -74,20 +74,6 @@ public:
             // 行窗口中的每块
             for (int32_t i = 0; i < rowPtrGm.GetValue(row + 1) - rowPtrGm.GetValue(row); i++) {
                 int32_t col = colGm.GetValue(
-<<<<<<< HEAD
-                    (rowPtrGm.GetValue(row) - rowPtrGm.GetValue(0)) + i
-                );
-                AscendC::printf("  Processing block %d/%d, col block idx=%d\n", i, 
-                    rowPtrGm.GetValue(row + 1) - rowPtrGm.GetValue(row), col);
-                // B窗口行中的每个 mmad 块
-                for (int32_t j = 0; j < mmadNum; j++) {
-                    // 因为是流水线式的，所以需要每次搬运 A 即使源地址一样
-                    CopyInA(row, i);//一行的第几个块
-                    CopyInB(j, col); // 块的列col，以及B的第j个mmadNum
-                    SplitA();
-                    SplitB(j); //B的split还和j有关？
-                    Compute(j); //计算第j个
-=======
                     rowPtrGm.GetValue(row) - rowPtrGm.GetValue(0) + i
                 );
                 // AscendC::printf("  Processing block %d/%d, col block idx=%d\n", i, 
@@ -102,7 +88,6 @@ public:
                     SplitB(j);
                     // Compute(j);
                     ComputeReuseA(a2Local, j);
->>>>>>> origin/main
                     CopyOut(row, j);
                 }
                 inQueueA2.FreeTensor(a2Local);
@@ -142,17 +127,10 @@ private:
 
         AscendC::DataCopy(a1Local, aGm, params);
         // if (row == 0 && i == 0) {
-<<<<<<< HEAD
-            uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(16)};
-            AscendC::ShapeInfo shapeInfo(2, array); 
-        // //     AscendC::DumpTensor(aGm, 0, 16*16, shapeInfo);
-            // AscendC::DumpTensor(a1Local, 0, 16*16, shapeInfo);
-=======
         //     uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(16)};
         //     AscendC::ShapeInfo shapeInfo(2, array); 
         // // //     AscendC::DumpTensor(aGm, 0, 16*16, shapeInfo);
         //     AscendC::DumpTensor(a1Local, 0, 16*16, shapeInfo);
->>>>>>> origin/main
         // }
         inQueueA1.EnQue<aType>(a1Local);
     }
@@ -246,20 +224,12 @@ private:
             // AscendC::DataCopy(b1Local[(i + CUBE_BLOCK_K) * 16], this->bGm[offset + i * N + 16], params);
         }
 
-<<<<<<< HEAD
-        AscendC::printf("Debug B Block: row %d, block col %d\n", col, j);
-        uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
-        AscendC::ShapeInfo shapeInfo(2, array); 
-        // AscendC::DumpTensor(this->bGm[offset], 0, 16*32, shapeInfo);
-        // AscendC::DumpTensor(b1Local, 1, 16*32, shapeInfo);
-=======
         if (col + CUBE_BLOCK_K - 1 >= K) {
             // AscendC::printf("Debug B Block: row %d, block col %d\n", col, j);
             uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
             AscendC::ShapeInfo shapeInfo(2, array); 
             // AscendC::DumpTensor(b1Local, 1, 16*32, shapeInfo);
         }
->>>>>>> origin/main
         inQueueB1.EnQue<bType>(b1Local);
     }
 
@@ -334,14 +304,6 @@ private:
         AscendC::Mmad(c1Local, a2Local, b2Local, params);
 
         //debug output
-<<<<<<< HEAD
-        AscendC::printf("Debug Compute: progress=%d\n", progress);
-        uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
-        AscendC::ShapeInfo shapeInfo(2, array); 
-        // AscendC::DumpTensor(a2Local, 0, 16*32, shapeInfo);
-        // AscendC::DumpTensor(b2Local, 1, 16*32, shapeInfo);
-        // AscendC::DumpTensor(c1Local, 2, 16*32, shapeInfo);
-=======
         // if (progress == 0) {
         // // AscendC::printf("Debug Compute: progress=%d\n", progress);
         // uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
@@ -350,7 +312,6 @@ private:
         // // AscendC::DumpTensor(b2Local, 1, 16*32, shapeInfo);
         // AscendC::DumpTensor(c1Local, 2, 16*32, shapeInfo);
         // }
->>>>>>> origin/main
         
         outQueueCO1.EnQue<cType>(c1Local);
         inQueueA2.FreeTensor(a2Local);
