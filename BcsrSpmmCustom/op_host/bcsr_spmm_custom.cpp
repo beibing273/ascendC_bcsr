@@ -14,16 +14,16 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context)
     // a_shape, row_ptr, col, val, b
     auto shape_a_addr = context->GetInputTensor(0)->GetData<int64_t>();
     auto shape_b = context->GetInputTensor(4)->GetOriginShape();
-    int32_t M = shape_a_addr[0];
-    int32_t K = shape_a_addr[1];
-    int32_t N = shape_b.GetDim(1);
+    // int32_t M = shape_a_addr[0];
+    // int32_t K = shape_a_addr[1];
+    // int32_t N = shape_b.GetDim(1);
 
     // 备用实现
     // auto shape_b = context->GetInputTensor(4)->GetOriginShape();
-    // auto shape_c = context->GetOutputShape(0)->GetOriginShape();
-    // int32_t M = shape_c.GetDim(0);
-    // int32_t K = shape_b.GetDim(0);
-    // int32_t N = shape_b.GetDim(1);
+    auto shape_c = context->GetOutputShape(0)->GetOriginShape();
+    int32_t M = shape_c.GetDim(0);
+    int32_t K = shape_b.GetDim(0);
+    int32_t N = shape_b.GetDim(1);
 
     tiling.set_M(M); 
     tiling.set_N(N);
@@ -49,9 +49,9 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context)
     tiling.set_tailNum(tailNum);
     tiling.set_tailLength(tailLength);
 
-    printf("BcsrSpmmCustom Tiling: M=%d, K=%d, N=%d, totalLength=%d, blockDim=%d, formerNum=%d, formerLength=%d, tailNum=%d, tailLength=%d\n",
-        M, K, N, totalLength, blockDim, formerNum, formerLength, tailNum, tailLength
-    );
+    // printf("BcsrSpmmCustom Tiling: M=%d, K=%d, N=%d, totalLength=%d, blockDim=%d, formerNum=%d, formerLength=%d, tailNum=%d, tailLength=%d\n",
+    //     M, K, N, totalLength, blockDim, formerNum, formerLength, tailNum, tailLength
+    // );
 
     uint32_t alignNum = 32 / sizeof(uint16_t);// 32 B  alingnNum = 16 == cube size
     // mmad相关参数计算
