@@ -27,12 +27,12 @@ public:
         this->M = M;
         this->K = K;
         this->N = N;
-        this->mmadNum = mmadNum;
-        this->mmadCubeBlockNum = mmadN / CUBE_BLOCK_M;  
-        this->lastMmadN = lastMmadN;
-        this->lastMmadCubeBlockNum = lastMmadCubeBlockNum;
-        this->mmadN = mmadN;
-        this->lastKLength = lastKLength;
+        this->mmadNum = mmadNum; //N 方向的块数
+        this->mmadCubeBlockNum = mmadN / CUBE_BLOCK_M;  //2
+        this->lastMmadN = lastMmadN;  // N方向最后一个mmad的实际大小
+        this->lastMmadCubeBlockNum = lastMmadCubeBlockNum; // N方向最后又多少cube
+        this->mmadN = mmadN; //16
+        this->lastKLength = lastKLength;  // K方向最后一个块的实际大小
         AscendC::printf("BcsrSpmmKernel Init: BlockIdx=%d, M=%d, K=%d, N=%d, mmadNum=%d, mmadN=%d\n", 
             AscendC::GetBlockIdx(), M, K, N, mmadNum, mmadN);
         if (AscendC::GetBlockIdx() < formerNum) {
@@ -56,8 +56,9 @@ public:
         valGm.SetGlobalBuffer((__gm__ aType *)val + CUBE_BLOCK_SIZE * rowPtrGm.GetValue(0),
             CUBE_BLOCK_SIZE * (rowPtrGm.GetValue(this->rowWindowNum) - rowPtrGm.GetValue(0))
         );
+        //每个核都需要获得完整的B矩阵
         bGm.SetGlobalBuffer((__gm__ bType *)b, (uint64_t)K * N);
-
+            
         pipe.InitBuffer(inQueueA1, 1, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
         pipe.InitBuffer(inQueueA2, 1, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
         pipe.InitBuffer(inQueueB1, 1, CUBE_BLOCK_K * this->mmadN * sizeof(bType));
@@ -67,21 +68,24 @@ public:
 
     __aicore__ inline void Process()
     {
+        //这里的row就是 对应的一行，不是一个windows
         for (int32_t row = 0; row < rowWindowNum; row++) {
             AscendC::printf("Blockidx=%d, Processing row window %d/%d\n", AscendC::GetBlockIdx(), row, rowWindowNum);
             // 行窗口中的每块
             for (int32_t i = 0; i < rowPtrGm.GetValue(row + 1) - rowPtrGm.GetValue(row); i++) {
-                int32_t col = colGm.GetValue(i);
+                int32_t col = colGm.GetValue(
+                    (rowPtrGm.GetValue(row) - rowPtrGm.GetValue(0)) + i
+                );
                 AscendC::printf("  Processing block %d/%d, col block idx=%d\n", i, 
                     rowPtrGm.GetValue(row + 1) - rowPtrGm.GetValue(row), col);
                 // B窗口行中的每个 mmad 块
                 for (int32_t j = 0; j < mmadNum; j++) {
                     // 因为是流水线式的，所以需要每次搬运 A 即使源地址一样
-                    CopyInA(row, i);
-                    CopyInB(j, col);
+                    CopyInA(row, i);//一行的第几个块
+                    CopyInB(j, col); // 块的列col，以及B的第j个mmadNum
                     SplitA();
-                    SplitB(j);
-                    Compute(j);
+                    SplitB(j); //B的split还和j有关？
+                    Compute(j); //计算第j个
                     CopyOut(row, j);
                 }
             }
@@ -122,7 +126,7 @@ private:
             uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(16)};
             AscendC::ShapeInfo shapeInfo(2, array); 
         // //     AscendC::DumpTensor(aGm, 0, 16*16, shapeInfo);
-            AscendC::DumpTensor(a1Local, 0, 16*16, shapeInfo);
+            // AscendC::DumpTensor(a1Local, 0, 16*16, shapeInfo);
         // }
         inQueueA1.EnQue<aType>(a1Local);
     }
@@ -179,7 +183,7 @@ private:
         uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
         AscendC::ShapeInfo shapeInfo(2, array); 
         // AscendC::DumpTensor(this->bGm[offset], 0, 16*32, shapeInfo);
-        AscendC::DumpTensor(b1Local, 1, 16*32, shapeInfo);
+        // AscendC::DumpTensor(b1Local, 1, 16*32, shapeInfo);
         inQueueB1.EnQue<bType>(b1Local);
     }
 
@@ -257,7 +261,7 @@ private:
         AscendC::ShapeInfo shapeInfo(2, array); 
         // AscendC::DumpTensor(a2Local, 0, 16*32, shapeInfo);
         // AscendC::DumpTensor(b2Local, 1, 16*32, shapeInfo);
-        AscendC::DumpTensor(c1Local, 2, 16*32, shapeInfo);
+        // AscendC::DumpTensor(c1Local, 2, 16*32, shapeInfo);
         
         outQueueCO1.EnQue<cType>(c1Local);
         inQueueA2.FreeTensor(a2Local);

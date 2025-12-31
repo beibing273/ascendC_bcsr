@@ -58,3 +58,5 @@ CTestTestfile.cmake
 .*.bak
 *.tmp
 *.temp
+
+inputs_all/*
