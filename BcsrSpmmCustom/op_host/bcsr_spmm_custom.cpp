@@ -49,9 +49,9 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context)
     tiling.set_tailNum(tailNum);
     tiling.set_tailLength(tailLength);
 
-    printf("BcsrSpmmCustom Tiling: M=%d, K=%d, N=%d, totalLength=%d, blockDim=%d, formerNum=%d, formerLength=%d, tailNum=%d, tailLength=%d\n",
-        M, K, N, totalLength, blockDim, formerNum, formerLength, tailNum, tailLength
-    );
+    // printf("BcsrSpmmCustom Tiling: M=%d, K=%d, N=%d, totalLength=%d, blockDim=%d, formerNum=%d, formerLength=%d, tailNum=%d, tailLength=%d\n",
+    //     M, K, N, totalLength, blockDim, formerNum, formerLength, tailNum, tailLength
+    // );
 
     uint32_t alignNum = 32 / sizeof(uint16_t);
     // mmad相关参数计算

@@ -1,0 +1,432 @@
+Sample: dwa512
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.014232 ms
+  opRunner.RunOp:
+    Run 1: 537.376527 ms
+----------------------------------------
+Sample: af23560
+  aclnnBcsrSpmmCustom:
+    Run 1: 381.986012 ms
+  opRunner.RunOp:
+    Run 1: 1068.866093 ms
+----------------------------------------
+Sample: lop163
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.625252 ms
+  opRunner.RunOp:
+    Run 1: 496.122909 ms
+----------------------------------------
+Sample: bfwa398
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.794811 ms
+  opRunner.RunOp:
+    Run 1: 496.455526 ms
+----------------------------------------
+Sample: dwb512
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.720131 ms
+  opRunner.RunOp:
+    Run 1: 497.183073 ms
+----------------------------------------
+Sample: bfwa62
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.605721 ms
+  opRunner.RunOp:
+    Run 1: 499.150652 ms
+----------------------------------------
+Sample: mhd3200a
+  aclnnBcsrSpmmCustom:
+    Run 1: 2.219734 ms
+  opRunner.RunOp:
+    Run 1: 535.239276 ms
+----------------------------------------
+Sample: bfwa782
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.096792 ms
+  opRunner.RunOp:
+    Run 1: 552.177659 ms
+----------------------------------------
+Sample: mhd3200b
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.667613 ms
+  opRunner.RunOp:
+    Run 1: 535.902071 ms
+----------------------------------------
+Sample: bfwb398
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.740121 ms
+  opRunner.RunOp:
+    Run 1: 497.217680 ms
+----------------------------------------
+Sample: qh768
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.133322 ms
+  opRunner.RunOp:
+    Run 1: 528.882548 ms
+----------------------------------------
+Sample: bfwb62
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.639251 ms
+  opRunner.RunOp:
+    Run 1: 497.766654 ms
+----------------------------------------
+Sample: qh882
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.144232 ms
+  opRunner.RunOp:
+    Run 1: 566.607442 ms
+----------------------------------------
+Sample: bfwb782
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.861151 ms
+  opRunner.RunOp:
+    Run 1: 526.608118 ms
+----------------------------------------
+Sample: rbsa480
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.194192 ms
+  opRunner.RunOp:
+    Run 1: 505.358362 ms
+----------------------------------------
+Sample: bwm200
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.616800 ms
+  opRunner.RunOp:
+    Run 1: 498.119189 ms
+----------------------------------------
+Sample: rbsb480
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.157312 ms
+  opRunner.RunOp:
+    Run 1: 501.231607 ms
+----------------------------------------
+Sample: bwm2000
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.711802 ms
+  opRunner.RunOp:
+    Run 1: 525.670446 ms
+----------------------------------------
+Sample: rdb1250
+  aclnnBcsrSpmmCustom:
+    Run 1: 22.377537 ms
+  opRunner.RunOp:
+    Run 1: 564.796309 ms
+----------------------------------------
+Sample: cdde1
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.934221 ms
+  opRunner.RunOp:
+    Run 1: 583.335313 ms
+----------------------------------------
+Sample: rdb1250l
+  aclnnBcsrSpmmCustom:
+    Run 1: 22.207065 ms
+  opRunner.RunOp:
+    Run 1: 566.931808 ms
+----------------------------------------
+Sample: cdde2
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.940421 ms
+  opRunner.RunOp:
+    Run 1: 536.178879 ms
+----------------------------------------
+Sample: rdb200
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.638011 ms
+  opRunner.RunOp:
+    Run 1: 495.385903 ms
+----------------------------------------
+Sample: cdde3
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.921521 ms
+  opRunner.RunOp:
+    Run 1: 542.775426 ms
+----------------------------------------
+Sample: rdb200l
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.626161 ms
+  opRunner.RunOp:
+    Run 1: 497.021010 ms
+----------------------------------------
+Sample: cdde4
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.071271 ms
+  opRunner.RunOp:
+    Run 1: 540.175457 ms
+----------------------------------------
+Sample: rdb2048
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.647372 ms
+  opRunner.RunOp:
+    Run 1: 531.556753 ms
+----------------------------------------
+Sample: cdde5
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.923461 ms
+  opRunner.RunOp:
+    Run 1: 539.331973 ms
+----------------------------------------
+Sample: rdb2048_noL
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.660981 ms
+  opRunner.RunOp:
+    Run 1: 524.985381 ms
+----------------------------------------
+Sample: cdde6
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.048521 ms
+  opRunner.RunOp:
+    Run 1: 544.714881 ms
+----------------------------------------
+Sample: rdb3200l
+  aclnnBcsrSpmmCustom:
+    Run 1: 3.008692 ms
+  opRunner.RunOp:
+    Run 1: 531.862315 ms
+----------------------------------------
+Sample: ck104
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.614791 ms
+  opRunner.RunOp:
+    Run 1: 494.281626 ms
+----------------------------------------
+Sample: rdb450
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.777010 ms
+  opRunner.RunOp:
+    Run 1: 497.906958 ms
+----------------------------------------
+Sample: ck400
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.739151 ms
+  opRunner.RunOp:
+    Run 1: 502.494187 ms
+----------------------------------------
+Sample: rdb450l
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.742280 ms
+  opRunner.RunOp:
+    Run 1: 496.294725 ms
+----------------------------------------
+Sample: ck656
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.771150 ms
+  opRunner.RunOp:
+    Run 1: 540.997802 ms
+----------------------------------------
+Sample: dw8192
+  aclnnBcsrSpmmCustom:
+    Run 1: 18.850208 ms
+  opRunner.RunOp:
+    Run 1: 562.977135 ms
+----------------------------------------
+Sample: cryg10000
+  aclnnBcsrSpmmCustom:
+    Run 1: 33.207151 ms
+  opRunner.RunOp:
+    Run 1: 587.595803 ms
+----------------------------------------
+Sample: rdb5000
+  aclnnBcsrSpmmCustom:
+    Run 1: 8.658552 ms
+  opRunner.RunOp:
+    Run 1: 559.876055 ms
+----------------------------------------
+Sample: cryg2500
+  aclnnBcsrSpmmCustom:
+    Run 1: 2.850020 ms
+  opRunner.RunOp:
+    Run 1: 530.898149 ms
+----------------------------------------
+Sample: rdb800l
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.911321 ms
+  opRunner.RunOp:
+    Run 1: 551.371577 ms
+----------------------------------------
+Sample: dw1024
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.759971 ms
+  opRunner.RunOp:
+    Run 1: 527.239272 ms
+----------------------------------------
+Sample: rdb968
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.022620 ms
+  opRunner.RunOp:
+    Run 1: 537.099392 ms
+----------------------------------------
+Sample: dw2048
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.774550 ms
+  opRunner.RunOp:
+    Run 1: 526.580390 ms
+----------------------------------------
+Sample: rw136
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.635610 ms
+  opRunner.RunOp:
+    Run 1: 501.791590 ms
+----------------------------------------
+Sample: dw256A
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.742130 ms
+  opRunner.RunOp:
+    Run 1: 498.057719 ms
+----------------------------------------
+Sample: rw496
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.761510 ms
+  opRunner.RunOp:
+    Run 1: 500.095700 ms
+----------------------------------------
+Sample: dw256B
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.744160 ms
+  opRunner.RunOp:
+    Run 1: 503.346508 ms
+----------------------------------------
+Sample: rw5151
+  aclnnBcsrSpmmCustom:
+    Run 1: 9.503339 ms
+  opRunner.RunOp:
+    Run 1: 557.319331 ms
+----------------------------------------
+Sample: dw4096
+  aclnnBcsrSpmmCustom:
+    Run 1: 18.830547 ms
+  opRunner.RunOp:
+    Run 1: 570.445143 ms
+----------------------------------------
+Sample: mhd4800a
+  aclnnBcsrSpmmCustom:
+    Run 1: 3.942359 ms
+  opRunner.RunOp:
+    Run 1: 534.315846 ms
+----------------------------------------
+Sample: tols1090
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.129740 ms
+  opRunner.RunOp:
+    Run 1: 567.570728 ms
+----------------------------------------
+Sample: mhd4800b
+  aclnnBcsrSpmmCustom:
+    Run 1: 2.825979 ms
+  opRunner.RunOp:
+    Run 1: 530.649376 ms
+----------------------------------------
+Sample: tols2000
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.627319 ms
+  opRunner.RunOp:
+    Run 1: 505.670954 ms
+----------------------------------------
+Sample: mhda416
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.716420 ms
+  opRunner.RunOp:
+    Run 1: 495.792850 ms
+----------------------------------------
+Sample: tols340
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.746920 ms
+  opRunner.RunOp:
+    Run 1: 495.005296 ms
+----------------------------------------
+Sample: mhdb416
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.627670 ms
+  opRunner.RunOp:
+    Run 1: 498.657565 ms
+----------------------------------------
+Sample: tols4000
+  aclnnBcsrSpmmCustom:
+    Run 1: 2.929268 ms
+  opRunner.RunOp:
+    Run 1: 532.835799 ms
+----------------------------------------
+Sample: odepa400
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.720310 ms
+  opRunner.RunOp:
+    Run 1: 501.690802 ms
+----------------------------------------
+Sample: tols90
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.620190 ms
+  opRunner.RunOp:
+    Run 1: 497.531274 ms
+----------------------------------------
+Sample: odepb400
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.616670 ms
+  opRunner.RunOp:
+    Run 1: 521.351751 ms
+----------------------------------------
+Sample: tub100
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.608730 ms
+  opRunner.RunOp:
+    Run 1: 508.174153 ms
+----------------------------------------
+Sample: olm100
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.626310 ms
+  opRunner.RunOp:
+    Run 1: 500.822069 ms
+----------------------------------------
+Sample: tub1000
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.844970 ms
+  opRunner.RunOp:
+    Run 1: 535.402492 ms
+----------------------------------------
+Sample: olm1000
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.802639 ms
+  opRunner.RunOp:
+    Run 1: 538.513638 ms
+----------------------------------------
+Sample: olm2000
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.300589 ms
+  opRunner.RunOp:
+    Run 1: 534.603303 ms
+----------------------------------------
+Sample: olm500
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.706260 ms
+  opRunner.RunOp:
+    Run 1: 503.342979 ms
+----------------------------------------
+Sample: olm5000
+  aclnnBcsrSpmmCustom:
+    Run 1: 4.268326 ms
+  opRunner.RunOp:
+    Run 1: 530.624878 ms
+----------------------------------------
+Sample: pde225
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.621030 ms
+  opRunner.RunOp:
+    Run 1: 500.283496 ms
+----------------------------------------
+Sample: pde2961
+  aclnnBcsrSpmmCustom:
+    Run 1: 3.586096 ms
+  opRunner.RunOp:
+    Run 1: 541.929185 ms
+----------------------------------------
+Sample: pde900
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.105549 ms
+  opRunner.RunOp:
+    Run 1: 551.740877 ms
+----------------------------------------
+Sample: qh1484
+  aclnnBcsrSpmmCustom:
+    Run 1: 2.219637 ms
+  opRunner.RunOp:
+    Run 1: 563.632705 ms
+----------------------------------------

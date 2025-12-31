@@ -39,10 +39,16 @@ function main {
     echo "[INFO]: Make success!"
     cd $CURRENT_DIR
 
+    # 设置优化测试结果输出目录
+    OUTPUT_DIR_NAME="output_loadAonce"
+    TIMER_PATH="src/timer.cpp"
+    # 修改timer 输出目录
+    # std::string filePath = "../output/" + category + ".txt";
+    sed -i "s|output/|$OUTPUT_DIR_NAME/|g" $TIMER_PATH
     # 定义输入输出目录
-    INPUTS_DIR="../inputs"
-    OUTPUT_DIR="../output"
-    # INPUTS_DIR="/root/autodl-tmp/MatmulInvocationNeo_v1/inputs"
+    # INPUTS_DIR="../inputs"
+    OUTPUT_DIR="../$OUTPUT_DIR_NAME"
+    INPUTS_DIR="/root/autodl-tmp/MatmulInvocationNeo_v1/inputs/Bai"
     # OUTPUT_DIR="../output"
     # 时间测试记录在 '../output' 目录下，详情见 './src/main.cpp'
 
@@ -110,6 +116,16 @@ function main {
         echo "==================== Finished test for $sample_name ===================="
         echo ""
     done
+
+    # 8.执行时间分析脚本
+    # copy result to script dir for time analysis
+    cp "$OUTPUT_DIR/Bai.txt" ../scripts/
+    (
+        cd ../scripts/
+        python3 ./calculate_average_time.py
+    )
+    # 9. 还原timer.cpp
+    sed -i "s|$OUTPUT_DIR_NAME/|output/|g" $TIMER_PATH
 }
 
 main
