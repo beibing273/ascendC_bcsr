@@ -56,8 +56,9 @@ public:
         valGm.SetGlobalBuffer((__gm__ aType *)val + CUBE_BLOCK_SIZE * rowPtrGm.GetValue(0),
             CUBE_BLOCK_SIZE * (rowPtrGm.GetValue(this->rowWindowNum) - rowPtrGm.GetValue(0))
         );
+        //每个核都需要获得完整的B矩阵
         bGm.SetGlobalBuffer((__gm__ bType *)b, (uint64_t)K * N);
-
+            
         pipe.InitBuffer(inQueueA1, 1, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
         pipe.InitBuffer(inQueueA2, 1, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
         pipe.InitBuffer(inQueueB1, 1, CUBE_BLOCK_K * this->mmadN * sizeof(bType));
@@ -67,6 +68,7 @@ public:
 
     __aicore__ inline void Process()
     {
+        //这里的row就是 对应的一行，不是一个windows
         for (int32_t row = 0; row < rowWindowNum; row++) {
             // AscendC::printf("Blockidx=%d, Processing row window %d/%d\n", AscendC::GetBlockIdx(), row, rowWindowNum);
             // 行窗口中的每块

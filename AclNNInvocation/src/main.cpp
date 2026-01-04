@@ -175,10 +175,16 @@ bool RunOp(int64_t m, int64_t k, int64_t n, int64_t windowNum, int64_t blockNum,
     INFO_LOG("Run op success");
     return true;
 }
-
+int mode_select(std::string smode){
+    if(smode=="reorder"){
+        return 1;
+    }else{
+        return 0;
+    }
+}
 int main(int argc, char **argv)
 {
-    if (argc != 13) {
+    if (argc != 14) {
         // std::cerr << "Usage: " << argv[0] << " <M> <K> <N> <NNZ> <row_ptr.bin> <col.bin> <values.bin> <b.bin> <c.bin> <category> <sample_name>" << std::endl;
         std::cerr << "Usage: " << argv[0] << " <M> <K> <N> <WINDOW_NUM> <BLOCK_NUM> <row_ptr.bin> <col.bin> <values.bin> <b.bin> <c.bin> <category> <sample_name>" << std::endl;
         return FAILED;
@@ -196,6 +202,8 @@ int main(int argc, char **argv)
     std::string c = argv[10];
     std::string category = argv[11];
     std::string sampleName = argv[12];
+    std::string smode=argv[13];
+    int mode=mode_select(smode);
 
     if (!InitResource()) {
         ERROR_LOG("Init resource failed");
@@ -211,7 +219,7 @@ int main(int argc, char **argv)
     DestroyResource();
 
     Timer::CalculateAndRecordAll();
-    Log::Write(category, sampleName, Timer::GetTimings());
+    Log::Write(category, sampleName, Timer::GetTimings(),mode);
     Timer::Clear();
 
     return SUCCESS;

@@ -376,7 +376,7 @@ bool OpRunner::RunOp()
             kind = ACL_MEMCPY_DEVICE_TO_DEVICE;
         }
         if (aclrtMemcpy(hostOutputs_[i], size, devOutputs_[i], size, kind) != ACL_SUCCESS) {
-            INFO_LOG("Copy output[%zu] success", i);
+            INFO_LOG("Copy output[%zu] fail", i);
             (void)aclrtDestroyStream(stream);
             return false;
         }

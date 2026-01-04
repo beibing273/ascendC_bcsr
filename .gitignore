@@ -59,5 +59,9 @@ CTestTestfile.cmake
 *.tmp
 *.temp
 
+<<<<<<< HEAD
+inputs_all/*
+=======
 # output
 output*/
+>>>>>>> origin/main

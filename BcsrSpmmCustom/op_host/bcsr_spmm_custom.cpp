@@ -25,12 +25,12 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context)
     int32_t K = shape_b.GetDim(0);
     int32_t N = shape_b.GetDim(1);
 
-    tiling.set_M(M);
+    tiling.set_M(M); 
     tiling.set_N(N);
     tiling.set_K(K);
 
     // totalLength 行窗口数
-    uint32_t totalLength = context->GetInputShape(1)->GetOriginShape().GetShapeSize() - 1;
+    uint32_t totalLength = context->GetInputShape(1)->GetOriginShape().GetShapeSize() - 1; //get window num
     uint32_t blockDim = ascendcPlatform.GetCoreNumAic();    // Cube core 数量
     blockDim = blockDim > totalLength ? totalLength : blockDim;
     context->SetBlockDim(blockDim);
@@ -53,12 +53,12 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context)
     //     M, K, N, totalLength, blockDim, formerNum, formerLength, tailNum, tailLength
     // );
 
-    uint32_t alignNum = 32 / sizeof(uint16_t);
+    uint32_t alignNum = 32 / sizeof(uint16_t);// 32 B  alingnNum = 16 == cube size
     // mmad相关参数计算
-    uint32_t mmadN = MAX_MMAD_N;
-    uint32_t mmadNum = (N + mmadN - 1) / mmadN;
-    uint32_t lastMmadN = N - (mmadNum - 1) * mmadN;
-    uint32_t lastMmadCubeBlockNum = (lastMmadN + alignNum - 1) / alignNum;
+    uint32_t mmadN = MAX_MMAD_N; //32
+    uint32_t mmadNum = (N + mmadN - 1) / mmadN;  // 有多少个32
+    uint32_t lastMmadN = N - (mmadNum - 1) * mmadN;  //最后一个有多少列
+    uint32_t lastMmadCubeBlockNum = (lastMmadN + alignNum - 1) / alignNum;// last mmad N 对齐到 cube size
     tiling.set_mmadNum(mmadNum);
     tiling.set_mmadN(mmadN);
     tiling.set_lastMmadN(lastMmadN);

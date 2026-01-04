@@ -44,11 +44,13 @@ function main {
     TIMER_PATH="src/timer.cpp"
     # 修改timer 输出目录
     # std::string filePath = "../output/" + category + ".txt";
-    sed -i "s|output/|$OUTPUT_DIR_NAME/|g" $TIMER_PATH
+    #sed -i "s|output/|$OUTPUT_DIR_NAME/|g" $TIMER_PATH
     # 定义输入输出目录
-    # INPUTS_DIR="../inputs"
-    OUTPUT_DIR="../$OUTPUT_DIR_NAME"
-    INPUTS_DIR="/root/autodl-tmp/MatmulInvocationNeo_v1/inputs/Bai"
+    INPUTS_DIR="../temp_input_copy"
+    # INPUTS_DIR="../inputs_all"
+    OUTPUT_DIR="../output_all"
+    MODE="default"
+    # INPUTS_DIR="/root/autodl-tmp/MatmulInvocationNeo_v1/inputs"
     # OUTPUT_DIR="../output"
     # 时间测试记录在 '../output' 目录下，详情见 './src/main.cpp'
 
@@ -68,7 +70,7 @@ function main {
         echo "==================== Running test for $sample_name ===================="
 
         # 3. 解析矩阵维度
-        dims=$(python3 scripts/parse_matrix.py $mtx_file)
+        dims=$(python3 scripts/parse_matrix_copy.py $mtx_file)
         if [ $? -ne 0 ]; then
             echo "[ERROR]: Failed to parse matrix dimensions for $mtx_file"
             continue
@@ -88,7 +90,7 @@ function main {
         export LD_LIBRARY_PATH=$_ASCEND_INSTALL_PATH/opp/vendors/customize/op_api/lib:$LD_LIBRARY_PATH
         # echo "[INFO]: Execute op for $sample_name!"
         category=$(basename $category_dir)
-        ./output/execute_spmm_op $m $k $n $window_num $block_num $input_row_ptr $input_col $input_values $input_b $output_c $category $sample_name
+        ./output/execute_spmm_op $m $k $n $window_num $block_num $input_row_ptr $input_col $input_values $input_b $output_c $category $sample_name $MODE
         if [ $? -ne 0 ]; then
             echo "[ERROR]: Acl executable run failed for sample $sample_name!"
             continue
@@ -110,7 +112,7 @@ function main {
         fi
 
         # 7. 删除输出文件以节省空间
-        rm $output_c $input_row_indices $input_col_indices $input_values
+        # rm $output_c $input_row_indices $input_col_indices $input_values
         # echo "[INFO]: Removed output file and temp file"
 
         echo "==================== Finished test for $sample_name ===================="
@@ -119,13 +121,13 @@ function main {
 
     # 8.执行时间分析脚本
     # copy result to script dir for time analysis
-    cp "$OUTPUT_DIR/Bai.txt" ../scripts/
-    (
-        cd ../scripts/
-        python3 ./calculate_average_time.py
-    )
+    # cp "$OUTPUT_DIR/Bai.txt" ../scripts/
+    # (
+    #     cd ../scripts/
+    #     python3 ./calculate_average_time.py
+    # )
     # 9. 还原timer.cpp
-    sed -i "s|$OUTPUT_DIR_NAME/|output/|g" $TIMER_PATH
+    #sed -i "s|$OUTPUT_DIR_NAME/|output/|g" $TIMER_PATH
 }
 
 main
