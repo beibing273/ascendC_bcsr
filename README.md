@@ -42,3 +42,13 @@ chmod -R go-w .
 cd AclNNInvocation/
 bash run.sh
 ```
+---------------------------------------------
+【add_reorder执行测试】：将run.sh文件中的
+```
+bash test.sh
+```
+改为
+```
+bash test_reorder.sh
+```
+即可
