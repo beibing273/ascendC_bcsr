@@ -1,3 +1,11 @@
+【add_order更新日志】
+2026/1/8
+- parse_matrix_copy_reorder.py中新增reorder_double_row_csr_minhash函数
+- AclNNInvocation/test_reorder.sh中新增MODE变量（default/reorder），作为main函数输入参数
+- AclNNInvocation/inc新增re_handler类，用于处理aiCore返回的结果
+- 其他：结果正确性测试通过，性能测试发现只有小部分矩阵性能提升，大部分性能下降。（推测：可能重排序破坏了矩阵原有的结构特征，导致功不抵过。还需要进一步的聚合手段进行优化，如列浓缩）
+
+  
 - 无 bias 的 matmul，基本上是按照 MatmulCustomMultiCore 的 sample 代码（带 bias 玩的版本）改的
 - 源代码在 ./MatmulCustom 下
 - 相应的改了 Acl 的代码和脚本
