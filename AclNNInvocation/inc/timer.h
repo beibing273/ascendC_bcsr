@@ -54,7 +54,7 @@ private:
 
 class Log {
 public:
-    static void Write(const std::string& category, const std::string& sampleName, const std::map<std::string, std::vector<double>>& timings,int mode);
+    static void Write(const std::string& category, const std::string& sampleName, const std::map<std::string, std::vector<double>>& timings,const std::string& smode);
 };
 
 #endif // TIMER_H

@@ -177,6 +177,10 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
     row_ptr_np.tofile(os.path.join(output_dir, 'row_ptr.bin'))
     col_idx_np.tofile(os.path.join(output_dir, 'col_idx.bin'))
     values_np.tofile(os.path.join(output_dir, 'values.bin'))
+    
+    np.savetxt(os.path.join(output_dir, 'row_ptr.txt'),row_ptr_np,delimiter="\n",fmt="%d")
+    np.savetxt(os.path.join(output_dir, 'col_idx.txt'), col_idx_np,delimiter="\n",fmt="%d")
+    np.savetxt(os.path.join(output_dir, 'values.txt'),values_np,delimiter="\n",fmt="%.10f")
 
     # Generate padded B (x2_gm.bin) with deterministic seed based on sample_name
     rng = np.random.default_rng(abs(hash(sample_name)) % (2**32))
@@ -193,6 +197,7 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
     # Save B and golden
     b_pad.tofile(os.path.join(output_dir, 'x2_gm.bin'))
     golden.tofile(os.path.join(output_dir, 'golden.bin'))
+    fill_rate=round(nnz/(len(all_block_cols)*BLOCK_M*BLOCK_K),2)
 
     # Save metadata
     with open(os.path.join(output_dir, 'block_info.txt'), 'w') as f:
@@ -209,7 +214,7 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
         f.write(f"Total_values_stored={len(values_np)}\n")
 
     # IMPORTANT: print padded dims (for your bash script / host to use)
-    print(f"{M_pad} {K_pad} {N_pad} {nnz} {block_rows} {len(all_block_cols)}")
+    print(f"{M_pad} {K_pad} {N_pad} {nnz} {block_rows} {len(all_block_cols)} {fill_rate}")
 
 
 if __name__ == "__main__":
