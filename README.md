@@ -1,9 +1,13 @@
 【add_order更新日志】
-2026/1/8
+*2026/1/8
 - parse_matrix_copy_reorder.py中新增reorder_double_row_csr_minhash函数
 - AclNNInvocation/test_reorder.sh中新增MODE变量（default/reorder），作为main函数输入参数
 - AclNNInvocation/inc新增re_handler类，用于处理aiCore返回的结果
 - 其他：结果正确性测试通过，性能测试发现只有小部分矩阵性能提升，大部分性能下降。（推测：可能重排序破坏了矩阵原有的结构特征，导致功不抵过。还需要进一步的聚合手段进行优化，如列浓缩）
+
+*2026/1/13
+- parse_matrix_copy_reorder.py中新增reorder_double_DTC函数
+- 其他：结果正确性测试通过，DTC双重排的性能测试大部分情况下性能优于之前的双重排，但依然不如默认情况下的效果。
 
 #######################################
 
