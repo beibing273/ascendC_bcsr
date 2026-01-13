@@ -5,6 +5,7 @@ from datasketch import MinHash,MinHashLSH
 import scipy.sparse as ssp
 import scipy.io as sio
 import queue
+import time
 def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
     """
     Parses a .mtx file to extract matrix and convert to BCSR format.
@@ -95,9 +96,12 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
     #     csr_vals.tolist()
     # )
 
-    #双重排
-    new_M,new_csr_row_ptr,new_csr_col_idx,new_csr_vals,reorder_ind_ref=reorder_double_row_csr_minhash( M,K, nnz,BLOCK_M,BLOCK_K,csr_row_ptr.tolist(),csr_col_idx.tolist(),csr_vals.tolist())
-    M=new_M
+    # #双重排
+    # new_M,new_csr_row_ptr,new_csr_col_idx,new_csr_vals,reorder_ind_ref=reorder_double_row_csr_minhash( M,K, nnz,BLOCK_M,BLOCK_K,csr_row_ptr.tolist(),csr_col_idx.tolist(),csr_vals.tolist())
+    # M=new_M
+
+    #DTC重排
+    new_csr_row_ptr, new_csr_col_idx, new_csr_vals, reorder_ind_ref=reorder_double_DTC(M,BLOCK_M,nnz,csr_row_ptr,csr_col_idx,csr_vals)
 
     block_rows = (M + BLOCK_M - 1) // BLOCK_M
     M_pad=block_rows*BLOCK_M
@@ -384,6 +388,270 @@ def reorder_row_csr_minhash(rowlen,collen,nnz,block_k,csr_row_ptr,csr_col_idx,cs
     # print("vercify the errcount is",errcount2)
 
     return (new_csr_row_ptr,new_col_idx,new_csr_vals,reorder_inds_re)
+
+#copy from code of DTC-SPMM and modify, We reuse codes from  (https://github.com/HPMLL/DTC-SpMM_ASPLOS24)
+def reorder_double_DTC(num_row,block_m,nnz,ptr,idx,vals,per=128,thres=0.7,cluster_thres=0.7,cblock_m=128):
+    #print("=== Init lsh ===")
+    t0 = time.time()
+    lsh = MinHashLSH(threshold=thres, num_perm=per)
+    allver = []
+    lists = [[] for i in range(num_row)]
+
+    for i in range(num_row):
+        m = MinHash(num_perm=per)
+        for iter in range((int)(ptr[i]), (int)(ptr[i+1])):
+            m.update(str(idx[iter]).encode('utf-8'))
+            lists[i].append(idx[iter])
+        lsh.insert(i, m)
+        allver.append(m)
+
+    t1 = time.time()
+    #print("init LSH time (s)", t1 - t0)
+
+    # def root(i):
+    #     while i != cluster_id[i]:
+    #         cluster_id[i] = cluster_id[cluster_id[i]]
+    #         i = cluster_id[i]
+    #     return i
+    def root(i):
+        if cluster_id[i]!=cluster_id[cluster_id[i]]:
+            cluster_id[i]=root(cluster_id[i])
+        return cluster_id[i]
+    #生成独一无二的pair标识
+    def makenum(a, b):
+        if a > b:
+            tmp = a
+            a = b
+            b = tmp
+        return a * num_row + b
+    def jd(l1,l2):
+        if len(l1) == 0 or len(l2) == 0:
+            return 0
+        s1 = set(l1)
+        s2 = set(l2)
+        return (float)(len(s1.intersection(s2))) / len(s1.union(s2))
+
+    class Pair(object):
+        def __init__(self,p1,p2,similarity):
+            self.p1 = p1
+            self.p2 = p2
+            self.simi = similarity
+        def __lt__(self,other): # operator < 
+            return self.simi > other.simi
+        def __str__(self):
+            return str(self.p1) + ' ' + str(self.p2) + ' ' + str(self.simi)
+
+    que = queue.PriorityQueue()
+    sset = set()
+
+    #print("=== DTC reorder===")
+    t2 = time.time()
+    for i in range(num_row):
+        if ptr[i] == ptr[i + 1]:
+            continue
+        res = lsh.query(allver[i])
+        for simi_row in res:
+                if simi_row == i or makenum(simi_row, i) in sset:
+                    continue
+                que.put(Pair(simi_row, i, jd(lists[i],lists[simi_row])))
+                sset.add(makenum(i,simi_row))
+
+    #print("queue size: ", que.qsize())
+    t3 = time.time()
+    #print("query LSH time (s): ", t3 - t2)
+    cluster_id = [i for i in range(num_row)]
+    cluster_sz = [1 for i in range(num_row)]
+    deleted = [0 for i in range(num_row)]
+    num_cluster = num_row
+
+    t4 = time.time()
+    while (not que.empty()) and num_cluster > 0:
+        item = que.get()
+        p1 = item.p1
+        p2 = item.p2
+        sset.remove(makenum(p1, p2))
+        if p1 == cluster_id[p1] and p2 == cluster_id[p2]:
+            if deleted[p1] or deleted[p2]:
+                continue
+            if cluster_sz[p1] < cluster_sz[p2]:
+                cluster_id[p1] = p2
+                num_cluster = num_cluster - 1
+                cluster_sz[p2] = cluster_sz[p1] + cluster_sz[p2]
+                if cluster_sz[p2] >= block_m:
+                    deleted[p2] = 1
+                    num_cluster = num_cluster - 1
+            else:
+                cluster_id[p2] = p1
+                num_cluster = num_cluster - 1
+                cluster_sz[p1] = cluster_sz[p1] + cluster_sz[p2]
+                if cluster_sz[p1] >= block_m:
+                    deleted[p1] = 1
+                    num_cluster = num_cluster - 1
+        else:
+            p1 = root(p1)
+            p2 = root(p2)
+            if deleted[p1] or deleted[p2]:
+                continue
+            if p1 != p2 and not makenum(p1, p2) in sset:
+                que.put(Pair(p1, p2, jd(lists[p1], lists[p2])))
+                sset.add(makenum(p1, p2))
+    t5 = time.time()
+    #print("clustering time (s): ", t5 - t4)
+
+    clusters = {}
+    t6 = time.time()
+    for i in range(num_row):
+        ro = root(i)
+        if ro in clusters:
+            clusters[ro].append(i)
+        else:
+            clusters[ro] = [i]
+
+    t7 = time.time()
+    #print("put into clusters time (s): ", t7 - t6)
+    cluster_num = len(clusters)
+    #print("cluster_num:", cluster_num)
+
+    #print("=== Cache-Aware level clustering ===")
+    key = list(clusters.keys())
+    ## cluster twice to improve cache behaviour
+    def makenum_c(a, b):
+        if a > b:
+            tmp = a
+            a = b
+            b = tmp
+        return a * cluster_num + b
+
+    per_c = 128   # for 4090
+    lsh_c = MinHashLSH(threshold=cluster_thres, num_perm=per_c)
+    allver_c = []
+    lists_c = [[] for i in range(cluster_num)]   # unique column indices for each cluster lists_c[i]: indices for cluster i
+    cnt = 0
+    for i in clusters:
+        m = MinHash(num_perm=per_c)
+        list_cluster_i = [] 
+        for node in clusters[i]:
+            list_cluster_i = list_cluster_i +  lists[node]
+        list_cluster_i = list(set(list_cluster_i))
+        lists_c[cnt] = list_cluster_i
+        for ind in list_cluster_i:
+            m.update(str(ind).encode('utf-8'))
+        lsh_c.insert(str(cnt), m)
+        allver_c.append(m)
+        cnt = cnt + 1
+    que_c = queue.PriorityQueue()
+    sset_c = set()
+    t2 = time.time()
+    for i in range(cluster_num):
+        if i % 1000 == 0:
+            #print("reach cluster: ", i)
+            pass
+        if(len(lists_c[i])==0):
+            continue
+        res = lsh_c.query(allver_c[i])
+        for item in res:
+            if (int)(item) == i or makenum_c(i, (int)(item)) in sset_c:
+                continue
+            if len(lists_c[(int)(item)]) == 0:
+                continue
+            que_c.put(Pair(i, (int)(item), jd(lists_c[i], lists_c[(int)(item)])))
+            sset_c.add(makenum_c(i, (int)(item)))
+    #print("cluster queue size:", que_c.qsize())
+    t3 = time.time()
+    #print("query cluster LSH time (s): ", t3 - t2)
+    cluster_id_c = [i for i in range(cluster_num)]
+    cluster_sz_c = [1 for i in range(cluster_num)]
+    deleted_c = [0 for i in range(cluster_num)]
+    num_cluster_c = cluster_num
+    # def root_c(i):
+    #     while i != cluster_id_c[i]:
+    #         cluster_id_c[i] = cluster_id_c[cluster_id_c[i]]
+    #         i = cluster_id_c[i]
+    #     return i
+    def root_c(i):
+        if cluster_id_c[i]!=cluster_id_c[cluster_id_c[i]]:
+            cluster_id_c[i]=root_c(cluster_id_c[i])
+        return cluster_id_c[i]
+    t4 = time.time()
+    while (not que_c.empty()) and num_cluster_c > 0:
+        item = que_c.get()
+        p1 = item.p1
+        p2 = item.p2
+        sset_c.remove(makenum_c(p1, p2))
+        if p1 == cluster_id_c[p1] and p2 == cluster_id_c[p2]:
+            if deleted_c[p1] or deleted_c[p2]:
+                continue
+            if cluster_sz_c[p1] < cluster_sz_c[p2]:
+                cluster_id_c[p1] = p2
+                num_cluster_c = num_cluster_c - 1
+                cluster_sz_c[p2] = cluster_sz_c[p1] + cluster_sz_c[p2]
+                if cluster_sz_c[p2] >= cblock_m:
+                    deleted_c[p2] = 1
+                    num_cluster_c = num_cluster_c - 1
+            else:
+                cluster_id_c[p2] = p1
+                num_cluster_c = num_cluster_c - 1
+                cluster_sz_c[p1] = cluster_sz_c[p1] + cluster_sz_c[p2]
+                if cluster_sz_c[p1] >= cblock_m:
+                    deleted_c[p1] = 1
+                    num_cluster_c = num_cluster_c - 1
+        else:
+            p1 = root_c(p1)
+            p2 = root_c(p2)
+            if deleted_c[p1] or deleted_c[p2]:
+                continue
+            if p1 != p2 and not makenum_c(p1, p2) in sset_c:
+                que_c.put(Pair(p1, p2, jd(lists_c[p1], lists_c[p2])))
+                sset_c.add(makenum_c(p1, p2))
+    t5 = time.time()
+    #print("cluster clustering time (s): ", t5 - t4)
+    clusters_c = {}
+    t6 = time.time()
+    for i in range(cluster_num):
+        ro = root_c(i)
+        if ro in clusters_c:
+            clusters_c[ro].append(i)
+        else:
+            clusters_c[ro] = [i]
+    cluster_cluster_num = len(clusters_c)
+    #print("cluster_of_cluster_num: ", cluster_cluster_num)
+    t7 = time.time()
+    #print("put clusters into clusters time (s): ", t7 - t6)
+    # print(clusters_c)
+
+    #print("=== Save results ===")
+    reorder_ind_re = []
+    for j in clusters_c:
+        for k in clusters_c[j]:
+            clustersk = clusters[key[k]]
+            for item in clustersk:
+                reorder_ind_re.append(item)
+    
+    reorder_ind=[-1]*num_row
+    new_ptr=[0]*(num_row+1)
+    for i in range(num_row):
+        reorder_ind[reorder_ind_re[i]]=i
+        new_ptr[i+1]=ptr[reorder_ind_re[i]+1]-ptr[reorder_ind_re[i]]
+    for i in range(num_row):
+        new_ptr[i+1]+=new_ptr[i]
+        if reorder_ind[i]==-1:
+            print("[error]: DTC_reorder row is left")
+    
+    new_idx=[0]*nnz
+    new_vals=[0.0]*nnz
+    for i in range(num_row):
+        new_start_ind=new_ptr[i]
+        new_end_ind=new_ptr[i+1]
+        start_ind=ptr[reorder_ind_re[i]]
+        for ind in range(new_start_ind,new_end_ind):
+            new_idx[ind]=idx[start_ind]
+            new_vals[ind]=vals[start_ind]
+            start_ind+=1
+
+    return (new_ptr,new_idx,new_vals,reorder_ind_re)
+
+    
+
 
 
 
