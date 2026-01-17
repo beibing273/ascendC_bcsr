@@ -44,7 +44,7 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
 
     # You require B's K and N to be consistent AFTER padding:
     # N_pad == K_pad
-    N_pad = 256
+    N_pad = 128
 
     # Output directory: <dir>/<sample_name>/
     sample_name = os.path.splitext(os.path.basename(file_path))[0]
