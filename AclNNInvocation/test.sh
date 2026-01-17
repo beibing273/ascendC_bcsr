@@ -40,7 +40,7 @@ function main {
     cd $CURRENT_DIR
 
     # 设置优化测试结果输出目录
-    OUTPUT_DIR_NAME="output_loadAonce"
+    OUTPUT_DIR_NAME="output_all"
     TIMER_PATH="src/timer.cpp"
     # 修改timer 输出目录
     # std::string filePath = "../output/" + category + ".txt";
@@ -70,14 +70,14 @@ function main {
         echo "==================== Running test for $sample_name ===================="
 
         # 3. 解析矩阵维度
-        dims=$(python3 scripts/parse_matrix_copy.py $mtx_file)
+        dims=$(python3 scripts/parse_matrix.py $mtx_file)
         if [ $? -ne 0 ]; then
             echo "[ERROR]: Failed to parse matrix dimensions for $mtx_file"
             continue
         fi
-        read -r m k n nnz window_num block_num <<< "$dims"
+        read -r m k n nnz window_num block_num fill_rate<<< "$dims"
         echo "[INFO]: Matrix dimensions (M, K, N, NNZ): $m, $k, $n, $nnz"
-        echo "[INFO]: Block info (WindowNum, BlockNum): $window_num, $block_num"
+        echo "[INFO]: Block info (WindowNum, BlockNum, fill_rate): $window_num, $block_num,$fill_rate"
 
         # 4. 定义输入输出文件路径
         input_row_ptr="$sample_dir/row_ptr.bin"
