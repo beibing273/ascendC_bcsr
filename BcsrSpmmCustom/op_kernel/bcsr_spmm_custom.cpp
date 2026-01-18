@@ -17,8 +17,6 @@ public:
         int32_t M, int32_t N, int32_t K,
         uint32_t formerNum, uint32_t formerLength,
         uint32_t tailNum, uint32_t tailLength,
-        uint32_t mmadNum, uint32_t mmadN,   
-        uint32_t lastMmadN, uint32_t lastMmadCubeBlockNum,
         uint32_t lastKLength
     ) {
         // set cube only
@@ -27,14 +25,7 @@ public:
         this->M = M;
         this->K = K;
         this->N = N;
-        this->mmadNum = mmadNum;
-        this->mmadCubeBlockNum = mmadN / CUBE_BLOCK_M;  
-        this->lastMmadN = lastMmadN;
-        this->lastMmadCubeBlockNum = lastMmadCubeBlockNum;
-        this->mmadN = mmadN;
         this->lastKLength = lastKLength;
-        // AscendC::printf("BcsrSpmmKernel Init: BlockIdx=%d, M=%d, K=%d, N=%d, mmadNum=%d, mmadN=%d\n", 
-            // AscendC::GetBlockIdx(), M, K, N, mmadNum, mmadN);
         if (AscendC::GetBlockIdx() < formerNum) {
             this->rowWindowNum = formerLength;
             rowPtrGm.SetGlobalBuffer((__gm__ int32_t *)row_ptr + formerLength * AscendC::GetBlockIdx(), formerLength + 1);
@@ -61,9 +52,9 @@ public:
             
         pipe.InitBuffer(inQueueA1, 1, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
         pipe.InitBuffer(inQueueA2, 1, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
-        pipe.InitBuffer(inQueueB1, 1, CUBE_BLOCK_K * this->mmadN * sizeof(bType));
-        pipe.InitBuffer(inQueueB2, 1, CUBE_BLOCK_K * this->mmadN * sizeof(bType));
-        pipe.InitBuffer(outQueueCO1, 1, CUBE_BLOCK_M * this->mmadN  * sizeof(cType));
+        pipe.InitBuffer(inQueueB1, 1, CUBE_BLOCK_K * this->N * sizeof(bType));
+        pipe.InitBuffer(inQueueB2, 1, CUBE_BLOCK_K * this->N * sizeof(bType));
+        pipe.InitBuffer(outQueueCO1, 1, CUBE_BLOCK_M * this->N  * sizeof(cType));
     }
 
     __aicore__ inline void Process()
@@ -76,38 +67,17 @@ public:
                 int32_t col = colGm.GetValue(
                     rowPtrGm.GetValue(row) - rowPtrGm.GetValue(0) + i
                 );
-                // AscendC::printf("  Processing block %d/%d, col block idx=%d\n", i, 
-                    // rowPtrGm.GetValue(row + 1) - rowPtrGm.GetValue(row), col);
-                AscendC::LocalTensor<aType> a2Local = LoadA2Once(row, i);
-                // B窗口行中的每个 mmad 块
-                for (int32_t j = 0; j < mmadNum; j++) {
-                    // 因为是流水线式的，所以需要每次搬运 A 即使源地址一样
-                    // CopyInA(row, i);
-                    CopyInB(j, col);
-                    // SplitA();
-                    SplitB(j);
-                    // Compute(j);
-                    ComputeReuseA(a2Local, j);
-                    CopyOut(row, j);
-                }
-                inQueueA2.FreeTensor(a2Local);
+                CopyInA(row, i);
+                CopyInB(col);
+                SplitA();
+                SplitB();
+                Compute();
+                CopyOut(row);
             }
         }
     }
 
 private:
-    // // 每次 A 只读一个块，所以 ND 即 ZZ
-    // // 可以直接用 LoadData 搬运 512B, GM->A2
-    // __aicore__ inline void CopyInA(int32_t row, int32_t i) {
-    //     AscendC::LocalTensor<aType> a2Local = inQueueA2.AllocTensor<aType>();
-    //     auto aGm = this->valGm[(rowPtrGm.GetValue(row) - rowPtrGm.GetValue(0) + i) * CUBE_BLOCK_SIZE];
-    //     AscendC::LoadData2DParams params = {
-    //         // startIndex, repeatTimes, srcStride, 0, dstGap, ifTranspose, 0
-    //         static_cast<uint16_t>(rowPtrGm.GetValue(row) - rowPtrGm.GetValue(0) + i), 1, 0, 0, 0, false, 0
-    //     };
-    //     AscendC::LoadData(a2Local, aGm, params);
-    //     inQueueA2.EnQue<aType>(a2Local);
-    // }
 
     // 但是这里保留 Gm->A1->A2 的形式，方便后续扩展
     __aicore__ inline void CopyInA(int32_t row, int32_t i) {
@@ -121,115 +91,33 @@ private:
         params.dValue = CUBE_BLOCK_K;
         params.srcNdMatrixStride = 0;
         params.srcDValue = CUBE_BLOCK_K;
-        params.dstNzC0Stride = CUBE_BLOCK_M; //这个值暂时没用
+        // params.dstNzC0Stride = 0; //这个值暂时没用
         params.dstNzNStride = 1;
         params.dstNzMatrixStride = 0;
 
         AscendC::DataCopy(a1Local, aGm, params);
-        // if (row == 0 && i == 0) {
-        //     uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(16)};
-        //     AscendC::ShapeInfo shapeInfo(2, array); 
-        // // //     AscendC::DumpTensor(aGm, 0, 16*16, shapeInfo);
-        //     AscendC::DumpTensor(a1Local, 0, 16*16, shapeInfo);
-        // }
         inQueueA1.EnQue<aType>(a1Local);
     }
 
     // DataCopy API for each line of B
-    // 如果 leading N 太大用不了 ND2NZ 随路转化
-    __aicore__ inline void CopyInB(int32_t j, int32_t col) {
+    // 如果 leading N 太大用不了 ND2NZ 随路转化,N大小设置为128时可以用 ND2NZ
+    __aicore__ inline void CopyInB(int32_t col) {
         // col是A的列，对B来说是行
         // j 是B的block的列
         AscendC::LocalTensor<bType> b1Local = inQueueB1.AllocTensor<bType>();
-        
-        auto offset = col * N + j * this->mmadN;
-        
-        // AscendC::DataCopyParams params;
-        // 有一小部分 padding 的数据是不需要的，Mmad 时会忽略
-        // DataCopy的单位是32B，half类型就是16个元素
-        // 逐行搬运所以count是1，len应当是32*2B/32B，这样还需要把B做32字节对齐
-        // params.blockCount = 1;
-        // params.blockLen = ((j == mmadNum - 1) ? lastMmadN : this->mmadN) * sizeof(bType) / 32;
-        // params.srcStride = 0;
-        // params.dstStride = 0;
-        // AscendC::printf("%d %d %d %d\n", params.blockCount, params.blockLen, params.srcStride, params.dstStride);
-        // for (int32_t i = 0; i < CUBE_BLOCK_K; i++) {
-        //     // Copy one line at a time
-        //     AscendC::DataCopy(b1Local[i * mmadN], this->bGm[offset + i * N], params);
-        // }
+        auto offset = col * N ;// // 需要ND2NZ
+        AscendC::Nd2NzParams params;
+        params.ndNum = 1;
+        params.nValue = CUBE_BLOCK_K;
+        params.dValue = N;
+        params.srcNdMatrixStride = 0;
+        params.srcDValue = N;
+        params.dstNzC0Stride = CUBE_BLOCK_K;
+        params.dstNzNStride = 1;
+        params.dstNzMatrixStride = 0;
 
-        // 需要ND2NZ
-        // AscendC::Nd2NzParams params;
-        // params.ndNum = 1;
-        // params.nValue = CUBE_BLOCK_K;
-        // params.dValue = this->mmadN;
-        // params.srcNdMatrixStride = 0;
-        // params.srcDValue = N;
-        // params.dstNzC0Stride = 1;
-        // params.dstNzNStride = 1;
-        // params.dstNzMatrixStride = 1;
+        AscendC::DataCopy(b1Local, this->bGm[offset], params);
 
-        // AscendC::DataCopy(b1Local, this->bGm[offset], params);
-
-        // 手动ND2NZ
-        // 分形shape为 (32B/sizeof(BType)) x 16， 在aType=bType的时候分形行数和CUBE_BLOCK_K相等
-        AscendC::DataCopyParams params;
-        params.blockCount = 1;
-        // blockLen单位是32B
-        params.blockLen = 16 * sizeof(bType) / 32;
-        params.srcStride = 0;
-        params.dstStride = 0;
-
-        // // N不对齐，行尾padding
-        // AscendC::DataCopyExtParams params2;
-        // params2.blockCount = 1;
-        // // 单位是Byte
-        // params2.blockLen = this->lastMmadN * sizeof(bType);
-        // params2.srcStride = 0;
-        // params2.dstStride = 0;
-
-        // AscendC::DataCopyPadExtParams<bType> padParams;
-        // padParams.isPad = true;
-        // padParams.paddingValue = (bType)0;
-        // padParams.leftPadding = 0;
-        // padParams.rightPadding = this->mmadN - this->lastMmadN;
-
-        for (int32_t i = 0; i < CUBE_BLOCK_K; i++) {//一行行搬运
-            // K不对齐
-            if (col + i >= K) {
-                for (int32_t k = 0; k < this->mmadN / 16; k++) {
-                    AscendC::Duplicate(b1Local[(i + k * CUBE_BLOCK_K) * 16], (bType)0, 16);
-                }
-                continue;
-            }
-            for (int32_t k = 0; k < this->mmadN / 16; k++) {
-                //k=0或者1，差了256个数
-                //行数+1，只差了16个数，正确
-                AscendC::DataCopy(b1Local[(i + k * CUBE_BLOCK_K) * 16], this->bGm[offset + i * N + k * 16], params);
-            }
-            // N不对齐
-            if (j == mmadNum - 1 && this->lastMmadN < this->mmadN) {//最后一个mmad块且N不对齐
-                // for (int32_t k = 0; k < this->mmadN / 16; k++) {
-                //     AscendC::DataCopyPad(b1Local[(i + k * CUBE_BLOCK_K) * 16], this->bGm[offset + i * N + k * 16], params2, padParams);
-                // }
-                //32B对齐，half类型16个元素
-                AscendC::Duplicate(b1Local[(i + (this->lastMmadN / 16) * CUBE_BLOCK_K) * 16 + this->lastMmadN % 16], (bType)0, 16 - this->lastMmadN % 16);
-                //copy了一部分，这是为了后续兼容更大的MmadN，其他的越界的 整块儿的32B padding 0
-                // 为了保证 compute阶段不会读到垃圾数据(因为compute阶段是按mmadN整体读的)
-                for (int32_t k = this->lastMmadN / 16 + 1; k < this->mmadN / 16; k++) {
-                    AscendC::Duplicate(b1Local[(i + k * CUBE_BLOCK_K) * 16], (bType)0, 16);
-                }
-            }
-            // AscendC::DataCopy(b1Local[i * 16], this->bGm[offset + i * N], params);
-            // AscendC::DataCopy(b1Local[(i + CUBE_BLOCK_K) * 16], this->bGm[offset + i * N + 16], params);
-        }
-
-        if (col + CUBE_BLOCK_K - 1 >= K) {
-            // AscendC::printf("Debug B Block: row %d, block col %d\n", col, j);
-            uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
-            AscendC::ShapeInfo shapeInfo(2, array); 
-            // AscendC::DumpTensor(b1Local, 1, 16*32, shapeInfo);
-        }
         inQueueB1.EnQue<bType>(b1Local);
     }
 
@@ -240,15 +128,10 @@ private:
         AscendC::LoadData2DParams params;
         // params.repeatTimes = CUBE_BLOCK_SIZE * sizeof(aType) / 512;
         params.repeatTimes = 1;
-        params.srcStride = 1;//毕竟只有一块
+        params.srcStride = 0;
         params.dstGap = 0;
         params.ifTranspose = false;
         AscendC::LoadData(a2Local, a1Local, params);
-        // AscendC::printf("Debug SplitA:\n");
-
-        // uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(16)};
-        // AscendC::ShapeInfo shapeInfo(2, array); 
-        // AscendC::DumpTensor(a2Local, 0, 16*16, shapeInfo);
 
         inQueueA2.EnQue<aType>(a2Local);
         inQueueA1.FreeTensor(a1Local);
@@ -256,77 +139,47 @@ private:
 
     // NZ2ZN, LoadDataWithTranspose API
     // sizeof(bType) <= 2 时可以用
-    __aicore__ inline void SplitB(int32_t progress) {
+    __aicore__ inline void SplitB() {
         AscendC::LocalTensor<bType> b1Local = inQueueB1.DeQue<bType>();
         AscendC::LocalTensor<bType> b2Local = inQueueB2.AllocTensor<bType>();
 
-        AscendC::LoadData2dTransposeParams params;
-        params.startIndex = 0;
-        //总共又多少个 mmadN 块
-        params.repeatTimes = (progress == mmadNum - 1) ? lastMmadCubeBlockNum : mmadCubeBlockNum;
-        // params.repeatTimes = 2;
-        params.srcStride = 1; // 256个数字为单位
-        params.dstGap = sizeof(bType) <= 2 ? 0 : 1;
-        // params.dstGap = 0;
-        params.dstFracGap = 0;
-        AscendC::LoadDataWithTranspose(b2Local, b1Local, params);
-        // AscendC::printf("Debug SplitB: progress=%d\n", progress);
-        // uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
-        // AscendC::ShapeInfo shapeInfo(2, array); 
-        // // AscendC::DumpTensor(this->bGm[offset], 0, 16*32, shapeInfo);
-        // AscendC::DumpTensor(b2Local, 1, 16*32, shapeInfo);
+        AscendC::LoadData2DParams loadDataparams;
+        loadDataparams.repeatTimes = N/16;
+        loadDataparams.srcStride = 1;
+        loadDataparams.dstGap = 0;
+        loadDataparams.ifTranspose = true;
+        AscendC::LoadData(b2Local, b1Local, loadDataparams);
 
-        inQueueB1.FreeTensor(b1Local);
         inQueueB2.EnQue<bType>(b2Local);
+        inQueueB1.FreeTensor(b1Local);
     }
 
-    __aicore__ inline void Compute(int32_t progress) {
+    __aicore__ inline void Compute() {
         AscendC::LocalTensor<aType> a2Local = inQueueA2.DeQue<aType>();
         AscendC::LocalTensor<bType> b2Local = inQueueB2.DeQue<bType>();
         AscendC::LocalTensor<cType> c1Local = outQueueCO1.AllocTensor<cType>();
 
         AscendC::MmadParams params;
         params.m = CUBE_BLOCK_M;
-        // TODO: K 不一定跟 CUBE_BLOCK_K 对齐
-        // col == K / CUBE_BLOCK_K * CUBE_BLOCK_K, 尾部需要特殊处理
-        // 可能可以通过给 bGm 更大的空间，padding 0 来解决
         params.k = CUBE_BLOCK_K;
-        params.n = (progress == mmadNum - 1) ? lastMmadN : this->mmadN;
-
-        // if (progress == 0) {
-        // uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
-        // AscendC::ShapeInfo shapeInfo(2, array); 
-        // AscendC::DumpTensor(a2Local, 0, 16*32, shapeInfo);
-        // AscendC::DumpTensor(b2Local, 1, 16*32, shapeInfo);
-        // // AscendC::DumpTensor(c1Local, 2, 16*32, shapeInfo);
-        // }
+        params.n =N;
 
         AscendC::Mmad(c1Local, a2Local, b2Local, params);
 
-        //debug output
-        // if (progress == 0) {
-        // // AscendC::printf("Debug Compute: progress=%d\n", progress);
-        // uint32_t array[] = {static_cast<uint32_t>(16), static_cast<uint32_t>(32)};
-        // AscendC::ShapeInfo shapeInfo(2, array); 
-        // // AscendC::DumpTensor(a2Local, 0, 16*32, shapeInfo);
-        // // AscendC::DumpTensor(b2Local, 1, 16*32, shapeInfo);
-        // AscendC::DumpTensor(c1Local, 2, 16*32, shapeInfo);
-        // }
-        
         outQueueCO1.EnQue<cType>(c1Local);
         inQueueA2.FreeTensor(a2Local);
         inQueueB2.FreeTensor(b2Local);
     }
 
     // Fixpipe API
-    __aicore__ inline void CopyOut(int32_t row, int32_t progress) {
-        auto cGm = this->cGm[row * CUBE_BLOCK_M * N + progress * mmadCubeBlockNum * CUBE_BLOCK_M];
+    __aicore__ inline void CopyOut(int32_t row) {
+        auto cGm = this->cGm[row * CUBE_BLOCK_M * N ];
         AscendC::LocalTensor<cType> c1Local = outQueueCO1.DeQue<cType>();
 
         AscendC::FixpipeParamsV220 params;
         params.ndNum = 1;
         params.mSize = CUBE_BLOCK_M;
-        params.nSize = (progress == mmadNum - 1) ? lastMmadN : this->mmadN;
+        params.nSize = N;
         params.srcStride = CUBE_BLOCK_M;
         params.dstStride = N;
         params.srcNdStride = 0;
@@ -362,37 +215,9 @@ private:
     int32_t K;
     int32_t N;
     uint32_t rowWindowNum;
-    uint32_t mmadNum;
     uint32_t mmadCubeBlockNum;
-    uint32_t lastMmadN;
-    uint32_t lastMmadCubeBlockNum;
-    uint32_t mmadN;
     uint32_t lastKLength;
     
-    __aicore__ inline AscendC::LocalTensor<aType> LoadA2Once(int32_t row, int32_t i) {
-        // GM -> A1 (ND2NZ) + A1 -> A2 (LoadData)
-        CopyInA(row, i);
-        SplitA();
-        // 取出 A2，交给调用者在 j 循环里复用
-        AscendC::LocalTensor<aType> a2Local = inQueueA2.DeQue<aType>();
-        return a2Local;
-    }
-    
-    __aicore__ inline void ComputeReuseA(const AscendC::LocalTensor<aType> &a2Local, int32_t progress) {
-        AscendC::LocalTensor<bType> b2Local = inQueueB2.DeQue<bType>();
-        AscendC::LocalTensor<cType> c1Local = outQueueCO1.AllocTensor<cType>();
-
-        AscendC::MmadParams params;
-        params.m = CUBE_BLOCK_M;
-        params.k = CUBE_BLOCK_K;
-        params.n = (progress == mmadNum - 1) ? lastMmadN : this->mmadN;
-
-        AscendC::Mmad(c1Local, a2Local, b2Local, params);
-
-        outQueueCO1.EnQue<cType>(c1Local);
-        inQueueB2.FreeTensor(b2Local);
-    }
-
 };
 
 extern "C" __global__ __aicore__ void bcsr_spmm_custom(
@@ -407,8 +232,6 @@ extern "C" __global__ __aicore__ void bcsr_spmm_custom(
         tiling_data.M, tiling_data.N, tiling_data.K,
         tiling_data.formerNum, tiling_data.formerLength,
         tiling_data.tailNum, tiling_data.tailLength,
-        tiling_data.mmadNum, tiling_data.mmadN,
-        tiling_data.lastMmadN, tiling_data.lastMmadCubeBlockNum, 
         tiling_data.lastKLength
     );
     op.Process();

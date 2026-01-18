@@ -10,13 +10,6 @@ BEGIN_TILING_DATA_DEF(BcsrSpmmCustomTilingData)
   // 行窗口总数
   TILING_DATA_FIELD_DEF(uint32_t, totalLength);
 
-  // mmad一次能处理的N维度有限
-  // blockLength = N
-  TILING_DATA_FIELD_DEF(uint32_t, mmadNum);
-  TILING_DATA_FIELD_DEF(uint32_t, mmadN);
-  TILING_DATA_FIELD_DEF(uint32_t, lastMmadN);
-  TILING_DATA_FIELD_DEF(uint32_t, lastMmadCubeBlockNum);
-
   // 均分行窗口给每个cube core
   TILING_DATA_FIELD_DEF(uint32_t, formerNum);
   TILING_DATA_FIELD_DEF(uint32_t, formerLength);

@@ -54,15 +54,6 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context)
     // );
 
     uint32_t alignNum = 32 / sizeof(uint16_t);// 32 B  alingnNum = 16 == cube size
-    // mmad相关参数计算
-    uint32_t mmadN = MAX_MMAD_N; //32
-    uint32_t mmadNum = (N + mmadN - 1) / mmadN;  // 有多少个32
-    uint32_t lastMmadN = N - (mmadNum - 1) * mmadN;  //最后一个有多少列
-    uint32_t lastMmadCubeBlockNum = (lastMmadN + alignNum - 1) / alignNum;// last mmad N 对齐到 cube size
-    tiling.set_mmadNum(mmadNum);
-    tiling.set_mmadN(mmadN);
-    tiling.set_lastMmadN(lastMmadN);
-    tiling.set_lastMmadCubeBlockNum(lastMmadCubeBlockNum);
 
     // 处理K不对齐
     uint32_t lastKLength = K % alignNum;
