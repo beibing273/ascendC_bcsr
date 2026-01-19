@@ -59,23 +59,23 @@ function main {
     for mtx_file in $(find $INPUTS_DIR -name "*.mtx"); do
         sample_name=$(basename $mtx_file .mtx)
         category_dir=$(dirname $mtx_file)
-        sample_dir="$category_dir/${sample_name}_re"
+        sample_dir="$category_dir/${sample_name}_colcondense"
         
         echo "==================== Running test for $sample_name ===================="
 
         # 3. 解析矩阵维度
-        dims=$(python3 scripts/parse_matrix_copy_reorder.py $mtx_file)
+        dims=$(python3 scripts/parse_matrix.py $mtx_file)
         if [ $? -ne 0 ]; then
             echo "[ERROR]: Failed to parse matrix dimensions for $mtx_file"
             continue
         fi
-        read -r m k n nnz window_num block_num nozero_rate<<< "$dims"
+        read -r m k n nnz window_num block_num fill_rate<<< "$dims"
         echo "[INFO]: Matrix dimensions (M, K, N, NNZ): $m, $k, $n, $nnz"
-        echo "[INFO]: Block info (WindowNum, BlockNum, Nozero_rate): $window_num, $block_num, $nozero_rate"
+        echo "[INFO]: Block info (WindowNum, BlockNum, Fill_rate): $window_num, $block_num, $fill_rate"
 
         # 4. 定义输入输出文件路径
-        input_row_ptr="$sample_dir/row_ptr.bin"
-        input_col="$sample_dir/col_idx.bin"
+        input_row_ptr="$sample_dir/rw_ptr.bin"
+        input_col="$sample_dir/TC_col_ref.bin"
         input_values="$sample_dir/values.bin"
         input_ref="$sample_dir/reorder_ref.bin"
         input_b="$sample_dir/x2_gm.bin"

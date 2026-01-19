@@ -32,7 +32,8 @@ OperatorDesc CreateOpDesc(int64_t m, int64_t k, int64_t n, int64_t windowNum, in
 {
     // define operator
     std::vector<int64_t> shapeRowPtr{windowNum + 1};
-    std::vector<int64_t> shapeCol{blockNum};
+    //std::vector<int64_t> shapeCol{blockNum};
+    std::vector<int64_t> shapeCol{blockNum*TILE_K};
     std::vector<int64_t> shapeValues{blockNum * TILE_M * TILE_K};
     std::vector<int64_t> shapeAShape{2};
     std::vector<int64_t> shapeB{k, n};

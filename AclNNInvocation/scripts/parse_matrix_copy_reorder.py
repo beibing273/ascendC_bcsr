@@ -108,13 +108,14 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
     # #双重排
     # new_M,new_csr_row_ptr,new_csr_col_idx,new_csr_vals,reorder_ind_ref=reorder_double_row_csr_minhash( M,K, nnz,BLOCK_M,BLOCK_K,csr_row_ptr.tolist(),csr_col_idx.tolist(),csr_vals.tolist())
     # M=new_M
-
+    
     #DTC重排
     new_csr_row_ptr, new_csr_col_idx, new_csr_vals, reorder_ind_ref=reorder_double_DTC(M,BLOCK_M,BLOCK_K,nnz,csr_row_ptr,csr_col_idx,csr_vals)
 
     block_rows = (M + BLOCK_M - 1) // BLOCK_M
     M_pad=block_rows*BLOCK_M
-    #重排序映射添加填充行映射
+
+    #填充
     for padrow in range(M,M_pad):
         reorder_ind_ref.append(padrow)
 
@@ -126,9 +127,8 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
     rows_new = np.repeat(np.arange(M, dtype=np.int32), np.diff(new_csr_row_ptr))
     cols_new = new_csr_col_idx
     values_new = new_csr_vals
-
     
-
+    # Dictionary to store blocks: key=(block_row, block_col), value=list of (local_row, local_col, value)
     a_pad = np.zeros((M_pad, K_pad), dtype=np.float16)
 
     # Fill A_pad with original nonzeros
@@ -136,9 +136,6 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
         if 0 <= r < M and 0 <= c < K:
             a_pad[r, c] = np.float16(v)
     # Calculate block dimensions
-    
-    # Dictionary to store blocks: key=(block_row, block_col), value=list of (local_row, local_col, value)
-   
     
     # Populate blocks from csr to bcsr
     for r, c, v in zip(rows_new, cols_new, values_new):
@@ -213,6 +210,8 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
     values_np.tofile(os.path.join(output_dir, 'values.bin'))
     reorder_ref_np.tofile(os.path.join(output_dir,'reorder_ref.bin'))
 
+
+    #不用时注释掉就可以，只是方便查看重排后的结果
     np.savetxt(os.path.join(output_dir, 'row_ptr.txt'),row_ptr_np,delimiter="\n",fmt="%d")
     np.savetxt(os.path.join(output_dir, 'col_idx.txt'), col_idx_np,delimiter="\n",fmt="%d")
     np.savetxt(os.path.join(output_dir, 'values.txt'),values_np,delimiter="\n",fmt="%.10f")
@@ -346,7 +345,7 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
     M_pad=block_rows*BLOCK_M
     #重排序映射添加填充行映射
 
-
+    #对M_pad进行填充
     for padrow in range(M,M_pad):
         reorder_ind_ref.append(padrow)
 
@@ -480,7 +479,7 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
     TC_col_ref_np.tofile(os.path.join(output_dir, 'TC_col_ref.bin'))
     values_np.tofile(os.path.join(output_dir, 'values.bin'))
     reorder_ref_np.tofile(os.path.join(output_dir,'reorder_ref.bin'))
-
+    #不用时注释掉就可以，只是方便查看重排后的结果
     np.savetxt(os.path.join(output_dir, 'rw_ptr.txt'),rw_ptr_np,delimiter="\n",fmt="%d")
     np.savetxt(os.path.join(output_dir, 'TC_col_ref.txt'),TC_col_ref_np,delimiter="\n",fmt="%d")
     np.savetxt(os.path.join(output_dir, 'values.txt'),values_np,delimiter="\n",fmt="%.10f")

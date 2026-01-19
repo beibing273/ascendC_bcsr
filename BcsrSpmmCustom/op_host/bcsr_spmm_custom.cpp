@@ -10,7 +10,6 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context)
 {
     BcsrSpmmCustomTilingData tiling;
     auto ascendcPlatform = platform_ascendc::PlatformAscendC(context->GetPlatformInfo());
-
     // a_shape, row_ptr, col, val, b
     auto shape_a_addr = context->GetInputTensor(0)->GetData<int64_t>();
     auto shape_b = context->GetInputTensor(4)->GetOriginShape();

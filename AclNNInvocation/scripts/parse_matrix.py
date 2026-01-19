@@ -183,7 +183,7 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
     row_ptr_np.tofile(os.path.join(output_dir, 'row_ptr.bin'))
     col_idx_np.tofile(os.path.join(output_dir, 'col_idx.bin'))
     values_np.tofile(os.path.join(output_dir, 'values.bin'))
-    
+    #不用时注释掉就可以，只是方便查看重排后的结果
     np.savetxt(os.path.join(output_dir, 'row_ptr.txt'),row_ptr_np,delimiter="\n",fmt="%d")
     np.savetxt(os.path.join(output_dir, 'col_idx.txt'), col_idx_np,delimiter="\n",fmt="%d")
     np.savetxt(os.path.join(output_dir, 'values.txt'),values_np,delimiter="\n",fmt="%.10f")
@@ -225,7 +225,7 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
 
 
 
-def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
+def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=8, BLOCK_K=16):
     """
     Parses a .mtx file to extract matrix and convert to BCSR format.
     
@@ -254,13 +254,13 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
     
     # Get dimensions (ignore any additional fields like 'general' or 'symmetric')
     M, K, nnz = map(int, header[:3])
-    N = K  # As per problem description
+    N = 64  # As per problem description
     data_lines = lines[1:]
     block_rows = (M + BLOCK_M - 1) // BLOCK_M
     block_cols = (K + BLOCK_K - 1) // BLOCK_K
     M_pad=block_rows*BLOCK_M
     K_pad=block_cols*BLOCK_K
-    N_pad = 256
+    N_pad = 64
     blocks = {}
     # Special case: empty matrix
     if nnz == 0 or len(data_lines) == 0:
@@ -440,7 +440,8 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
     rw_ptr_np.tofile(os.path.join(output_dir, 'rw_ptr.bin'))
     TC_col_ref_np.tofile(os.path.join(output_dir, 'TC_col_ref.bin'))
     values_np.tofile(os.path.join(output_dir, 'values.bin'))
-
+    
+    #不用时注释掉就可以，只是方便查看重排后的结果
     np.savetxt(os.path.join(output_dir, 'rw_ptr.txt'),rw_ptr_np,delimiter="\n",fmt="%d")
     np.savetxt(os.path.join(output_dir, 'TC_col_ref.txt'),TC_col_ref_np,delimiter="\n",fmt="%d")
     np.savetxt(os.path.join(output_dir, 'values.txt'),values_np,delimiter="\n",fmt="%.10f")
@@ -498,4 +499,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     mtx_file = sys.argv[1]
-    parse_mtx_to_bcsr(mtx_file)
+    parse_mtx_to_bcsr_colcondense(mtx_file)
