@@ -40,7 +40,7 @@ function main {
     cd $CURRENT_DIR
 
     # 定义输入输出目录
-    INPUTS_DIR="../temp_input"
+    INPUTS_DIR="../temp_input_copy"
     # INPUTS_DIR="../inputs_all"
     OUTPUT_DIR="../output_all"
     MODE="reorder"
