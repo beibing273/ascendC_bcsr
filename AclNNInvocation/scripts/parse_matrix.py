@@ -225,7 +225,7 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
 
 
 
-def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=8, BLOCK_K=16):
+def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
     """
     Parses a .mtx file to extract matrix and convert to BCSR format.
     
@@ -332,6 +332,7 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=8, BLOCK_K=16):
     
     # Dictionary to store blocks: key=(block_row, block_col), value=list of (local_row, local_col, value)
     sparseAtoB=[0]*nnz
+    # sparseAtoB=[0]*nnz
     rw_partition = [0]*(block_rows+1)
     TCcolcount_rw=0
     TCcolcount=0
