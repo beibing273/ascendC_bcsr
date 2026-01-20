@@ -17,7 +17,7 @@ absolute_tol = 1e-6
 error_tol = 1e-4
 
 
-def verify_result(output, golden):
+def verify_result(output, golden,m,n, output_path, matrix_name):
     output = np.fromfile(output, dtype=np.float32).reshape(-1)
     golden = np.fromfile(golden, dtype=np.float32).reshape(-1)
     different_element_results = np.isclose(output,
@@ -49,12 +49,31 @@ def verify_result(output, golden):
 
     error_ratio = float(different_element_indexes.size) / golden.size
     print("error ratio: %.4f, tolerance: %.4f" % (error_ratio, error_tol))
+    # 如果验证失败,打印两个矩阵进行对比，按照二维格式输出到两个文件
+    if error_ratio > error_tol:
+        # 为输出矩阵组合路径和名字
+        output_matrix_path = "{}/{}_output_matrix.txt".format(output_path,matrix_name)
+        golden_matrix_path = "{}/{}_golden_matrix.txt".format(output_path,matrix_name)
+        print("Output Matrix:")
+        print_2d_matrix(output,output_matrix_path, int(m), int(n))
+        print("Golden Matrix:")
+        print_2d_matrix(golden,golden_matrix_path, int(m), int(n))
     return error_ratio <= error_tol
 
+# 打印二维的矩阵
+def print_2d_matrix(data,data_path, rows, cols):
+    with open(data_path, 'w') as f:
+        for i in range(rows):
+            for j in range(cols):
+                f.write("%6.1f\t" % data[i * cols + j])
+            f.write("\n")
+        f.write("\n")
 
 if __name__ == '__main__':
     try:
-        res = verify_result(sys.argv[1], sys.argv[2])
+        # 新增m，n参数，方便打印二维矩阵进行调试
+        # 新增输出路径目录和矩阵名字信息参数
+        res = verify_result(sys.argv[1], sys.argv[2],sys.argv[3],sys.argv[4], sys.argv[5], sys.argv[6])
         if not res:
             raise ValueError("[ERROR] result error")
         else:

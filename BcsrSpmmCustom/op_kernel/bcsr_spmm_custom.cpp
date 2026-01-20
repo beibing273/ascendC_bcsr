@@ -4,9 +4,9 @@
 template<typename aType, typename bType, typename cType,typename idxType>
 class BcsrSpmmKernel {
 // output C Tile size [16, 16]
-uint32_t CUBE_BLOCK_M = 8;
+uint32_t CUBE_BLOCK_M = 16;
 uint32_t CUBE_BLOCK_K = 32 / sizeof(aType);
-uint32_t CUBE_BLOCK_N = 8;
+// uint32_t CUBE_BLOCK_N = N;
 uint32_t CUBE_BLOCK_SIZE = CUBE_BLOCK_M * CUBE_BLOCK_K;
 
 public:
@@ -58,10 +58,10 @@ public:
         pipe.InitBuffer(inQueueA2, 1, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
         pipe.InitBuffer(inQueueB1, 1, CUBE_BLOCK_K * this->N * sizeof(bType));
         //pipe.InitBuffer(inQueueB2, 1, CUBE_BLOCK_K * this->N * sizeof(bType));
-        pipe.InitBuffer(inQueueB2, 1, CUBE_BLOCK_K *CUBE_BLOCK_N* sizeof(bType));
+        pipe.InitBuffer(inQueueB2, 1, CUBE_BLOCK_K *N* sizeof(bType));
         //pipe.InitBuffer(outQueueCO1, 1, CUBE_BLOCK_M * this->N  * sizeof(cType));
-        pipe.InitBuffer(outQueueCO1, 1, CUBE_BLOCK_M * CUBE_BLOCK_N * sizeof(cType));
-        pipe.InitBuffer(rowBQueue,1,CUBE_BLOCK_K*sizeof(idxType));
+        pipe.InitBuffer(outQueueCO1, 1, CUBE_BLOCK_M * N * sizeof(cType));
+        // pipe.InitBuffer(rowBQueue,1,CUBE_BLOCK_K*sizeof(idxType));
     }
 
     // __aicore__ inline void Process()
@@ -96,31 +96,31 @@ public:
                 //     rowPtrGm.GetValue(row) - rowPtrGm.GetValue(0) + i
                 // );
                 //将当前TC块的列对应B的行写入队列
-                AscendC::LocalTensor<idxType> sab=rowBQueue.AllocTensor<idxType>();
+                // AscendC::LocalTensor<idxType> sab=rowBQueue.AllocTensor<idxType>();
                 AscendC::DataCopyParams sabparam;
                 sabparam.blockCount=1;
                 sabparam.blockLen=CUBE_BLOCK_K*sizeof(idxType)/32;
                 sabparam.srcStride=0;
                 sabparam.dstStride=0;
-                AscendC::DataCopy(sab,colGm[(rowPtrGm(row)-rowPtrGm(0)+i)*CUBE_BLOCK_K],sabparam);
-                AscendC::DumpTensor(sab,1,CUBE_BLOCK_K);
+                // AscendC::DataCopy(sab,colGm[(rowPtrGm(row)-rowPtrGm(0)+i)*CUBE_BLOCK_K],sabparam);
+                // AscendC::DumpTensor(sab,1,CUBE_BLOCK_K);
                 AscendC::DumpTensor(colGm[(rowPtrGm(row)-rowPtrGm(0)+i)*CUBE_BLOCK_K],0,CUBE_BLOCK_K);
-                rowBQueue.EnQue<idxType>(sab);
+                // rowBQueue.EnQue<idxType>(sab);
                 CopyInA(row, i);
                 AscendC::printf("Blockid:%d,CopyInA is over\n",AscendC::GetBlockIdx());
-                CopyInB();
+                CopyInB(row,i);
                 AscendC::printf("Blockid:%d,CopyInB is over\n",AscendC::GetBlockIdx());
                 SplitA();
                 AscendC::printf("Blockid:%d,splitA is over\n",AscendC::GetBlockIdx());
-                for(int j=0;j<N/CUBE_BLOCK_N;++j){
-                  AscendC::printf("Blockid:%d,col loop is %d :",AscendC::GetBlockIdx(),j);
-                  SplitB(j);
+                // for(int j=0;j<N/CUBE_BLOCK_N;++j){
+                //   AscendC::printf("Blockid:%d,col loop is %d :",AscendC::GetBlockIdx(),j);
+                  SplitB();
                   AscendC::printf("splitB is over, ");
                   Compute();
                   AscendC::printf("compute is over, ");
-                  CopyOut(row,j);
+                  CopyOut(row);
                   AscendC::printf("copyout is over\n");
-                }
+                // }
                    
             }
         }
@@ -172,29 +172,32 @@ private:
     // }
 
     //列浓缩后的CopyInB
-    __aicore__ inline void CopyInB() {
+    __aicore__ inline void CopyInB(int32_t row,int32_t i) {
 
            
         AscendC::LocalTensor<bType> b1local=inQueueB1.AllocTensor<bType>();
-        AscendC::LocalTensor<idxType> idxBlocal=rowBQueue.DeQue<idxType>();
+        // AscendC::LocalTensor<idxType> idxBlocal=rowBQueue.DeQue<idxType>();
+        // colGm.GetValue((rowPtrGm(row)-rowPtrGm(0)+i)*CUBE_BLOCK_K);
         //此处DumpTensor不为零
-        AscendC::DumpTensor(idxBlocal,0,CUBE_BLOCK_K);
+        // AscendC::DumpTensor(idxBlocal,0,CUBE_BLOCK_K);
         AscendC::DataCopyParams b1param;
-        b1param.blockCount=N/CUBE_BLOCK_N;
-        b1param.blockLen=CUBE_BLOCK_N*sizeof(bType)/32;
+        b1param.blockCount=1;
+        b1param.blockLen=N*sizeof(bType)/32;
         b1param.srcStride=0;
         //copy同时进行ND->NZ转换
-        b1param.dstStride=CUBE_BLOCK_N*(CUBE_BLOCK_K-1)*sizeof(bType)/32;
-        for(int i=0;i<CUBE_BLOCK_K;++i){
+        b1param.dstStride=N*(CUBE_BLOCK_K-1)*sizeof(bType)/32;
+        for(int j=0;j<CUBE_BLOCK_K;++j){
            //直接获取值就为零
-           AscendC::printf("第%d次对应B的第%d行\n",i,idxBlocal.GetValue(i));
-           DataCopy(b1local[i*CUBE_BLOCK_N],bGm[idxBlocal.GetValue(i)*N],b1param);
+        //    AscendC::printf("第%d次对应B的第%d行\n",i,idxBlocal.GetValue(j));
+            int row_index = colGm.GetValue((rowPtrGm(row)-rowPtrGm(0)+i)*CUBE_BLOCK_K+j);
+           AscendC::printf("第%d次对应B的第%d行\n",j,row_index);
+            DataCopy(b1local[j*N],bGm[row_index*N],b1param);
           
         }
         AscendC::DumpTensor(b1local,0,N*CUBE_BLOCK_K);
         inQueueB1.EnQue<bType>(b1local);
 
-        rowBQueue.FreeTensor(idxBlocal);
+        // rowBQueue.FreeTensor(idxBlocal);
     }
 
     __aicore__ inline void SplitA() {
@@ -231,7 +234,7 @@ private:
     // }
 
     //列浓缩之后的splitB
-    __aicore__ inline void SplitB(const int32_t bcol) {
+    __aicore__ inline void SplitB() {
         AscendC::LocalTensor<bType> b1Local = inQueueB1.DeQue<bType>();
         AscendC::LocalTensor<bType> b2Local = inQueueB2.AllocTensor<bType>();
 
@@ -240,7 +243,7 @@ private:
         loadDataparams.srcStride = 1;
         loadDataparams.dstGap = 0;
         loadDataparams.ifTranspose = true;
-        AscendC::LoadData(b2Local, b1Local[bcol*CUBE_BLOCK_K*CUBE_BLOCK_N], loadDataparams);
+        AscendC::LoadData(b2Local, b1Local[CUBE_BLOCK_K*N], loadDataparams);
         // if(AscendC::GetBlockIdx()==0 && bcol==12){
         // AscendC::printf("12:\n");
         //    for(int i=0;i<CUBE_BLOCK_K;++i){
@@ -251,8 +254,8 @@ private:
         //    }
         // }
         inQueueB2.EnQue<bType>(b2Local);
-        if(bcol==(N-CUBE_BLOCK_N)/CUBE_BLOCK_N)
-           inQueueB1.FreeTensor(b1Local);
+        // if(bcol==(N-CUBE_BLOCK_N)/CUBE_BLOCK_N)
+        inQueueB1.FreeTensor(b1Local);
     }
 
     // __aicore__ inline void Compute() {
@@ -280,7 +283,7 @@ private:
         AscendC::MmadParams params;
         params.m = CUBE_BLOCK_M;
         params.k = CUBE_BLOCK_K;
-        params.n = CUBE_BLOCK_N;
+        params.n = N;
         AscendC::printf(" 2 ");
         AscendC::Mmad(c1Local, a2Local, b2Local, params);
         AscendC::printf(" 3 ");
@@ -315,14 +318,14 @@ private:
     // }
 
     // Fixpipe API
-    __aicore__ inline void CopyOut(int32_t row,int32_t bcol) {
-        auto cGm = this->cGm[row * CUBE_BLOCK_M * N + bcol*CUBE_BLOCK_N];
+    __aicore__ inline void CopyOut(int32_t row) {
+        auto cGm = this->cGm[row * CUBE_BLOCK_M * N];
         AscendC::LocalTensor<cType> c1Local = outQueueCO1.DeQue<cType>();
 
         AscendC::FixpipeParamsV220 params;
         params.ndNum = 1;
         params.mSize = CUBE_BLOCK_M;
-        params.nSize = CUBE_BLOCK_N;
+        params.nSize = N;
         params.srcStride = CUBE_BLOCK_M;
         params.dstStride = N;
         params.srcNdStride = 0;
@@ -347,7 +350,7 @@ private:
     AscendC::TQue<AscendC::TPosition::B2, 1> inQueueB2;
     AscendC::TQue<AscendC::TPosition::CO1, 1> outQueueCO1;
     //使用VECIN不知道为什么也不行，A1可以
-    AscendC::TQue<AscendC::TPosition::A1, 1> rowBQueue;
+    // AscendC::TQue<AscendC::TPosition::A1, 1> rowBQueue;
 
     AscendC::GlobalTensor<int32_t> rowPtrGm;
     AscendC::GlobalTensor<int32_t> colGm;

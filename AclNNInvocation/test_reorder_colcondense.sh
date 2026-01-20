@@ -40,7 +40,7 @@ function main {
     cd $CURRENT_DIR
 
     # 定义输入输出目录
-    INPUTS_DIR="../temp_input_copy"
+    INPUTS_DIR="../temp_input"
     # INPUTS_DIR="../inputs_all"
     OUTPUT_DIR="../output_all"
     MODE="reorder"
@@ -95,7 +95,7 @@ function main {
         golden_bin="$sample_dir/golden.bin"
         if [ -f "$golden_bin" ]; then
             # python3 scripts/verify_result.py $output_c $golden_bin > /dev/null 2>&1
-            python3 scripts/verify_result.py $output_c $golden_bin > "$OUTPUT_DIR/${sample_name}_wrong_indices"
+            python3 scripts/verify_result.py $output_c $golden_bin $m $n $OUTPUT_DIR $sample_name > "$OUTPUT_DIR/${sample_name}_wrong_indices"
             if [ $? -ne 0 ]; then
                 echo "[ERROR]: Verify result failed for sample $sample_name!"
                 echo "[$sample_name] (M, K, N, NNZ): $m, $k, $n, $nnz" >> $FAILURE_LOG
