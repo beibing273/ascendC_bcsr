@@ -368,32 +368,40 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
             a_pad[r, c] = np.float16(v)
     # Calculate block dimensions
     
-    # Dictionary to store blocks: key=(block_row, block_col), value=list of (local_row, local_col, value)
-    sparseAtoB=[0]*nnz
+    # Fill A_pad with original nonzeros
+    for r, c, v in zip(rows_new, cols_new, values_new):
+        if 0 <= r < M and 0 <= c < K:
+            a_pad[r, c] = np.float16(v)
+    # Calculate block dimensions
+    
+    sparseAtoB=[0]*nnz*BLOCK_K
+    # sparseAtoB=[0]*nnz
     rw_partition = [0]*(block_rows+1)
     TCcolcount_rw=0
     TCcolcount=0
     unique_col={}
     for csr_row in range(M):
-        rw_now=csr_row//BLOCK_M
         if(csr_row%BLOCK_M==0):
             all_col_in_rw=[]
             TCcolcount_rw=0
         for csr_ind in range(new_csr_row_ptr[csr_row],new_csr_row_ptr[csr_row+1]):
             all_col_in_rw.append(new_csr_col_idx[csr_ind])
-        if(csr_row%BLOCK_M==BLOCK_M-1 or csr_row==(M-1)):
+        if((csr_row%BLOCK_M==BLOCK_M-1 or csr_row==M-1) and (len(all_col_in_rw)!=0)):
             lastcol=-1
             all_col_in_rw.sort()
+            rw_now=csr_row//BLOCK_M
             for csr_col in range(len(all_col_in_rw)):
                 if lastcol!=all_col_in_rw[csr_col]:
                     lastcol=all_col_in_rw[csr_col]
                     sparseAtoB[rw_partition[rw_now]*BLOCK_K+TCcolcount_rw]=all_col_in_rw[csr_col]
                     unique_col[(rw_now,all_col_in_rw[csr_col])]=TCcolcount_rw
                     TCcolcount_rw+=1
+            for zerocol in range(TCcolcount_rw,(TCcolcount_rw+BLOCK_K-1)//BLOCK_K*BLOCK_K):
+                sparseAtoB[rw_partition[rw_now]*BLOCK_K+zerocol]=sparseAtoB[rw_partition[rw_now]*BLOCK_K+zerocol-1]
             rw_partition[rw_now+1]=rw_partition[rw_now]+(TCcolcount_rw+BLOCK_K-1)//BLOCK_K
     TCcount=rw_partition[block_rows]
     sparseAtoB=sparseAtoB[0:TCcount*BLOCK_K]
-    all_block_vals = [0]*(TCcount*BLOCK_M*BLOCK_K)
+    all_block_vals = [0]*(TCcount*BLOCK_M*BLOCK_K)  # Flattened block values
     
     for csr_row in range(M):
         rw_now=csr_row//BLOCK_M 
@@ -403,8 +411,6 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
             # if(TCid==rw_partition[block_rows]-1):
             #     print("correct")
             all_block_vals[TCid*BLOCK_M*BLOCK_K+(csr_row%BLOCK_M)*BLOCK_K+now_col%BLOCK_K]=new_csr_vals[csr_ind]
-
-
 
 
     # # Populate blocks from csr to bcsr

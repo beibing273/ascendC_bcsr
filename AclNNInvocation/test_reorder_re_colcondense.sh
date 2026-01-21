@@ -106,9 +106,9 @@ function main {
             echo "[WARN]: golden.bin not found for sample $sample_name. Skipping verification."
         fi
 
-        # 7. 删除输出文件以节省空间
-        # rm $output_c $input_row_indices $input_col_indices $input_values
-        # echo "[INFO]: Removed output file and temp file"
+        #7. 删除输出文件以节省空间
+        rm -r $output_c $sample_dir "$OUTPUT_DIR/${sample_name}_wrong_indices"
+        echo "[INFO]: Removed output file and temp file"
 
         echo "==================== Finished test for $sample_name ===================="
         echo ""
