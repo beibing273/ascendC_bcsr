@@ -254,13 +254,13 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
     
     # Get dimensions (ignore any additional fields like 'general' or 'symmetric')
     M, K, nnz = map(int, header[:3])
-    N = 64  # As per problem description
+    N = 256  # As per problem description
     data_lines = lines[1:]
     block_rows = (M + BLOCK_M - 1) // BLOCK_M
     block_cols = (K + BLOCK_K - 1) // BLOCK_K
     M_pad=block_rows*BLOCK_M
     K_pad=block_cols*BLOCK_K
-    N_pad = 64
+    N_pad = 256
     blocks = {}
     # Special case: empty matrix
     if nnz == 0 or len(data_lines) == 0:
