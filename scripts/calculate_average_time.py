@@ -50,7 +50,7 @@ def calculate_average_time_for_item(file_path, item_name):
 
 if __name__ == "__main__":
     # 要分析的文件列表
-    files_to_analyze = ['Bai.txt', 'Gset.txt', 'HB.txt', 'JGD_Homology.txt', 'Pajek.txt', 'VDOL.txt']
+    files_to_analyze = ['Bai_reorder.txt', 'Gset_reorder.txt', 'HB_reorder.txt', 'JGD_Homology_reorder.txt', 'Pajek_reorder.txt', 'VDOL_reorder.txt','Bai_default.txt', 'Gset_default.txt', 'HB_default.txt', 'JGD_Homology_default.txt', 'Pajek_default.txt', 'VDOL_default.txt']
     
     # 要计算的项目列表
     items_to_calculate = ["opRunner.RunOp", "aclnnBcsrSpmmCustom"]

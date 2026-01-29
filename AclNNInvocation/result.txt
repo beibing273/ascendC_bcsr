@@ -1,0 +1,99 @@
+
+[2026-01-26 17:42:26] Performance Statistics
+Category: temp_input_copy | Directory: ../temp_input_copy | Total Samples: 1 | Total Performance: 32.82065600 | Average: 32.820656
+
+[2026-01-26 17:43:16] Performance Statistics
+Category: temp_input_copy | Directory: ../temp_input_copy | Total Samples: 1 | Total Performance: 0.00000000 | Average: 0.000000
+
+[2026-01-26 17:44:34] Performance Statistics
+Category: temp_input_copy | Directory: ../temp_input_copy | Total Samples: 1 | Total Performance: 32.10064300 | Average: 32.100643
+
+[2026-01-26 17:58:42] Performance Statistics
+Category: temp_input_copy | Directory: temp_input_copy | Total Samples: 2 | Total Performance: 64.20128600 | Average: 32.100643
+
+[2026-01-26 17:59:58] Performance Statistics
+
+[2026-01-26 18:00:50] Performance Statistics
+
+[2026-01-26 18:03:09] Performance Statistics
+
+[2026-01-26 18:06:23] Performance Statistics
+
+[2026-01-26 18:09:31] Performance Statistics
+Category: temp_input_copy | Directory: ../temp_input_copy | Total Samples: 1 | Total Performance: 0.00000000 | Average: 0.000000
+
+[2026-01-26 18:10:57] Performance Statistics
+Category: temp_input_copy | Directory: ../temp_input_copy | Total Samples: 1 | Total Performance: 32.64065200 | Average: 32.640652
+
+[2026-01-26 18:11:31] Performance Statistics
+Category: temp_input_copy | Directory: ../temp_input_copy | Total Samples: 1 | Total Performance: 0.00000000 | Average: 0.000000
+
+[2026-01-26 18:14:37] Performance Statistics
+Category: temp_input_copy | Directory: ../temp_input_copy | Total Samples: 1 | Total Performance: 32.64065200 | Average: 32.640652
+
+[2026-01-26 18:15:17] Performance Statistics
+Category: temp_input_copy | Directory: ../temp_input_copy | Total Samples: 1 | Total Performance: 32.64065200 | Average: 32.640652
+
+[2026-01-26 18:20:09] Performance Statistics
+Category: a | Directory: ../temp_input_copy/a | Total Samples: 1 | Total Performance: 32.64065200 | Average: 32.640652
+
+[2026-01-26 18:26:49] Performance Statistics
+
+[2026-01-26 18:27:12] Performance Statistics
+
+[2026-01-26 18:32:30] Performance Statistics
+Category: Gset | Directory: Gset | Total Samples: 33 | Total Performance: 0.00000000 | Average: 0.000000
+
+[2026-01-26 18:35:35] Performance Statistics
+Category: Gset | Directory: Gset | Total Samples: 33 | Total Performance: 2693.89388200 | Average: 81.633148
+
+[2026-01-27 10:24:59] Performance Statistics
+Category: temp_input_copy | Directory: ../temp_input_copy | Total Samples: 1 | Total Performance: 0.00000000 | Average: 0.000000
+
+[2026-01-27 10:34:07] Performance Statistics
+
+[2026-01-27 10:35:13] Performance Statistics
+
+[2026-01-27 10:36:50] Performance Statistics
+Category: temp_input_ggt | Directory: ../temp_input_ggt | Total Samples: 1 | Total Performance: 0.00000000 | Average: 0.000000
+
+[2026-01-27 12:32:32] Performance Statistics
+Category: Gset | Directory: Gset | Total Samples: 33 | Total Performance: 3073.02148100 | Average: 93.121863
+
+[2026-01-27 12:39:14] Performance Statistics
+Category: Bai | Directory: Bai | Total Samples: 72 | Total Performance: 3143.68285100 | Average: 43.662262
+
+[2026-01-27 12:47:40] Performance Statistics
+Category: temp_input_copy | Directory: ../temp_input_copy | Total Samples: 1 | Total Performance: 34.92070000 | Average: 34.920700
+
+[2026-01-27 12:49:54] Performance Statistics
+
+[2026-01-27 13:08:07] Performance Statistics
+Category: Bai | Directory: ../inputs/Bai | Total Samples: 72 | Total Performance: 270.46541700 | Average: 3.756464
+Category: .ipynb_checkpoints | Directory: ../inputs/Bai/.ipynb_checkpoints | Total Samples: 1 | Total Performance: 2.66005300 | Average: 2.660053
+
+[2026-01-27 13:25:18] Performance Statistics
+Category: Bai | Directory: ../inputs/Bai | Total Samples: 72 | Total Performance: 185.76374400 | Average: 2.580052
+Category: .ipynb_checkpoints | Directory: ../inputs/Bai/.ipynb_checkpoints | Total Samples: 1 | Total Performance: 2.58005200 | Average: 2.580052
+
+[2026-01-27 13:43:25] Performance Statistics
+Category: Bai | Directory: ../inputs/Bai | Total Samples: 72 | Total Performance: 410.40820800 | Average: 5.700114
+Category: .ipynb_checkpoints | Directory: ../inputs/Bai/.ipynb_checkpoints | Total Samples: 1 | Total Performance: 5.70011400 | Average: 5.700114
+
+[2026-01-27 13:46:56] Performance Statistics
+Category: temp_input_ggt | Directory: ../temp_input_ggt | Total Samples: 1 | Total Performance: 96.36193100 | Average: 96.361931
+
+[2026-01-27 13:51:05] Performance Statistics
+Category: temp_input_ggt | Directory: ../temp_input_ggt | Total Samples: 1 | Total Performance: 0.00000000 | Average: 0.000000
+
+[2026-01-27 13:51:42] Performance Statistics
+Category: temp_input_ggt | Directory: ../temp_input_ggt | Total Samples: 1 | Total Performance: 95.72191600 | Average: 95.721916
+
+[2026-01-27 13:55:57] Performance Statistics
+Category: temp_input_ggt | Directory: ../temp_input_ggt | Total Samples: 1 | Total Performance: 96.36193100 | Average: 96.361931
+
+[2026-01-27 13:56:31] Performance Statistics
+Category: temp_input_ggt | Directory: ../temp_input_ggt | Total Samples: 1 | Total Performance: 96.36193100 | Average: 96.361931
+
+[2026-01-27 14:05:10] Performance Statistics
+Category: temp_input_ggt | Directory: ../temp_input_ggt | Total Samples: 1 | Total Performance: 0.00000000 | Average: 0.000000

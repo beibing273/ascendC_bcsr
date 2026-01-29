@@ -22,7 +22,8 @@ using namespace std;
 extern bool g_isDevice;
 
 OpRunner::OpRunner(OperatorDesc *opDesc) : opDesc_(opDesc)
-{
+{   
+    numattr_= opDesc->numAttr;
     numInputs_ = opDesc->inputDesc.size();
     numOutputs_ = opDesc->outputDesc.size();
     numInputsArray_ = opDesc->numInputArray;
@@ -64,7 +65,9 @@ OpRunner::~OpRunner()
 }
 
 bool OpRunner::Init()
-{
+{   for(size_t i=0;i<numattr_;++i){
+       attr_.emplace_back(opDesc_->attrDesc[i]);
+    }
     for (size_t i = 0; i < numInputs_; ++i) {
         auto size = GetInputSize(i);
         void *devMem = nullptr;
@@ -336,13 +339,14 @@ bool OpRunner::RunOp()
 
     size_t workspaceSize = 0;
     aclOpExecutor *handle = nullptr;
-    auto ret = aclnnBcsrSpmmCustomGetWorkspaceSize(inputArray_[0], inputTensor_[0], inputTensor_[1], inputTensor_[2], inputTensor_[3], outputTensor_[0],
+
+    auto ret = aclnnBcsrSpmmCustomGetWorkspaceSize(inputArray_[0], inputTensor_[0], inputTensor_[1], inputTensor_[2], inputTensor_[3],((int32_t *)attr_[0])[0], outputTensor_[0],
                                                  &workspaceSize, &handle);
-    if (ret != ACL_SUCCESS) {
+     if (ret != ACL_SUCCESS) {
         (void)aclrtDestroyStream(stream);
         ERROR_LOG("Get Operator Workspace failed. error code is %d", static_cast<int32_t>(ret));
         return false;
-    }
+     }
     // INFO_LOG("Execute aclnnBcsrSpmmCustomGetWorkspaceSize success, workspace size %lu", workspaceSize);
 
     if (workspaceSize != 0) {

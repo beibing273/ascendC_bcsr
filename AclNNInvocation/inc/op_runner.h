@@ -161,6 +161,7 @@ public:
 
 private:
     size_t numInputs_;
+    size_t numattr_;
     size_t numInputsArray_;
     size_t numOutputs_;
     void *workspace_;
@@ -173,6 +174,8 @@ private:
 
     std::vector<void *> hostInputs_;
     std::vector<void *> hostOutputs_;
+
+    std::vector<void *> attr_;
 
     std::vector<aclTensor *> inputTensor_;
     std::vector<aclIntArray *> inputArray_;

@@ -13,6 +13,8 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context)
     // a_shape, row_ptr, col, val, b
     auto shape_a_addr = context->GetInputTensor(0)->GetData<int64_t>();
     auto shape_b = context->GetInputTensor(4)->GetOriginShape();
+    const gert::RuntimeAttrs *attrs = context->GetAttrs();
+    const int32_t* con_thres=attrs->GetAttrPointer<int32_t>(0);
     // int32_t M = shape_a_addr[0];
     // int32_t K = shape_a_addr[1];
     // int32_t N = shape_b.GetDim(1);
@@ -27,6 +29,7 @@ static ge::graphStatus TilingFunc(gert::TilingContext* context)
     tiling.set_M(M); 
     tiling.set_N(N);
     tiling.set_K(K);
+    tiling.set_con_thres(*con_thres);
 
     // totalLength 行窗口数
     uint32_t totalLength = context->GetInputShape(1)->GetOriginShape().GetShapeSize() - 1; //get window num
@@ -129,7 +132,9 @@ public:
             .ParamType(REQUIRED)
             .DataType({ge::DT_FLOAT})
             .Format({ge::FORMAT_ND});
-
+        this->Attr("con_thres")
+            .AttrType(OPTIONAL)
+            .Int(1);
         this->SetInferShape(ge::InferShape).SetInferDataType(ge::InferDataType);
 
         this->AICore()

@@ -203,7 +203,7 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
     # Save B and golden
     b_pad.tofile(os.path.join(output_dir, 'x2_gm.bin'))
     golden.tofile(os.path.join(output_dir, 'golden.bin'))
-    nozero_rate=round(nnz/(len(all_block_cols)*BLOCK_M*BLOCK_K),2)
+    mean_nnz=round(nnz/(len(all_block_cols)*BLOCK_M*BLOCK_K),2)*BLOCK_M*BLOCK_K
 
     # Save metadata
     with open(os.path.join(output_dir, 'block_info.txt'), 'w') as f:
@@ -220,12 +220,12 @@ def parse_mtx_to_bcsr(file_path, BLOCK_M=16, BLOCK_K=16):
         f.write(f"Total_values_stored={len(values_np)}\n")
 
     # IMPORTANT: print padded dims (for your bash script / host to use)
-    print(f"{M_pad} {K_pad} {N_pad} {nnz} {block_rows} {len(all_block_cols)} {nozero_rate}")
+    print(f"{M_pad} {K_pad} {N_pad} {nnz} {block_rows} {len(all_block_cols)} {mean_nnz}")
 
 
 
 
-def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
+def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16,con_thres=1):
     """
     Parses a .mtx file to extract matrix and convert to BCSR format.
     
@@ -254,13 +254,13 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
     
     # Get dimensions (ignore any additional fields like 'general' or 'symmetric')
     M, K, nnz = map(int, header[:3])
-    N = 256  # As per problem description
+    N = 128  # As per problem description
     data_lines = lines[1:]
     block_rows = (M + BLOCK_M - 1) // BLOCK_M
     block_cols = (K + BLOCK_K - 1) // BLOCK_K
     M_pad=block_rows*BLOCK_M
     K_pad=block_cols*BLOCK_K
-    N_pad = 256
+    N_pad = 128
     blocks = {}
     # Special case: empty matrix
     if nnz == 0 or len(data_lines) == 0:
@@ -288,7 +288,7 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
             f.write(f"Num_blocks=0\n")
             f.write(f"Total_values_stored=0\n")
         
-        print(f"{M_pad} {K_pad} {N_pad} {nnz} {block_rows} 0 0")
+        print(f"{M_pad} {K_pad} {N_pad} {nnz} {block_rows} 0 0 0")
         return
     
     # Parse data lines
@@ -330,107 +330,51 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
             a_pad[r, c] = np.float16(v)
     # Calculate block dimensions
     
-    # Fill A_pad with original nonzeros
-    for r, c, v in zip(rows_new, cols_new, values_new):
-        if 0 <= r < M and 0 <= c < K:
-            a_pad[r, c] = np.float16(v)
-    # Calculate block dimensions
-    
     sparseAtoB=[0]*nnz*BLOCK_K
     # sparseAtoB=[0]*nnz
     rw_partition = [0]*(block_rows+1)
     TCcolcount_rw=0
     TCcolcount=0
     unique_col={}
+    BLOCK_K_TILE=BLOCK_K//con_thres
     for csr_row in range(M):
+        rw_now=csr_row//BLOCK_M
         if(csr_row%BLOCK_M==0):
             all_col_in_rw=[]
             TCcolcount_rw=0
         for csr_ind in range(new_csr_row_ptr[csr_row],new_csr_row_ptr[csr_row+1]):
-            all_col_in_rw.append(new_csr_col_idx[csr_ind])
+            all_col_in_rw.append(new_csr_col_idx[csr_ind]//con_thres)
         if((csr_row%BLOCK_M==BLOCK_M-1 or csr_row==M-1) and (len(all_col_in_rw)!=0)):
             lastcol=-1
             all_col_in_rw.sort()
-            rw_now=csr_row//BLOCK_M
             for csr_col in range(len(all_col_in_rw)):
                 if lastcol!=all_col_in_rw[csr_col]:
                     lastcol=all_col_in_rw[csr_col]
-                    sparseAtoB[rw_partition[rw_now]*BLOCK_K+TCcolcount_rw]=all_col_in_rw[csr_col]
+                    sparseAtoB[rw_partition[rw_now]*BLOCK_K_TILE+TCcolcount_rw]=all_col_in_rw[csr_col]
                     unique_col[(rw_now,all_col_in_rw[csr_col])]=TCcolcount_rw
                     TCcolcount_rw+=1
-            for zerocol in range(TCcolcount_rw,(TCcolcount_rw+BLOCK_K-1)//BLOCK_K*BLOCK_K):
-                sparseAtoB[rw_partition[rw_now]*BLOCK_K+zerocol]=sparseAtoB[rw_partition[rw_now]*BLOCK_K+zerocol-1]
-            rw_partition[rw_now+1]=rw_partition[rw_now]+(TCcolcount_rw+BLOCK_K-1)//BLOCK_K
+            for zerocol in range(TCcolcount_rw,(TCcolcount_rw+BLOCK_K_TILE-1)//BLOCK_K_TILE*BLOCK_K_TILE):
+                sparseAtoB[rw_partition[rw_now]*BLOCK_K_TILE+zerocol]=sparseAtoB[rw_partition[rw_now]*BLOCK_K_TILE+zerocol-1]
+        if (csr_row%BLOCK_M==BLOCK_M-1 or csr_row==M-1):
+            rw_partition[rw_now+1]=rw_partition[rw_now]+(TCcolcount_rw+BLOCK_K_TILE-1)//BLOCK_K_TILE
     TCcount=rw_partition[block_rows]
-    sparseAtoB=sparseAtoB[0:TCcount*BLOCK_K]
+    for i in range(0,block_rows):
+        if(rw_partition[i+1]<rw_partition[i]):
+            print("block_row is {i}")
+    #print(f"TCcount is {TCcount}")
+    sparseAtoB=sparseAtoB[0:TCcount*BLOCK_K_TILE]
     all_block_vals = [0]*(TCcount*BLOCK_M*BLOCK_K)  # Flattened block values
     
     for csr_row in range(M):
         rw_now=csr_row//BLOCK_M 
         for csr_ind in range(new_csr_row_ptr[csr_row],new_csr_row_ptr[csr_row+1]):
-            now_col=unique_col[(rw_now,new_csr_col_idx[csr_ind])]
+            pre_col=new_csr_col_idx[csr_ind]
+            now_col=unique_col[(rw_now,pre_col//con_thres)]*con_thres+pre_col%con_thres
             TCid=rw_partition[rw_now]+now_col//BLOCK_K
-            # if(TCid==rw_partition[block_rows]-1):
+            # if(TCid==TCcount-1):
             #     print("correct")
             all_block_vals[TCid*BLOCK_M*BLOCK_K+(csr_row%BLOCK_M)*BLOCK_K+now_col%BLOCK_K]=new_csr_vals[csr_ind]
 
-
-
-    # # Populate blocks from csr to bcsr
-    # for r, c, v in zip(rows_new, cols_new, values_new):
-    #     # Skip elements outside matrix dimensions (shouldn't happen, but safe)
-    #     if r >= M or c >= K:
-    #         continue
-    #     # if(r==1):
-    #     #     print(c)
-    #     block_row = r // BLOCK_M
-    #     local_row = r % BLOCK_M
-        
-    #     if block_row not in blocks:
-    #         blocks[block_row] = {}
-    #     elif blocks[block_row][c] not in blocks:
-    #         blocks[block_row][c]=[]
-    #     blocks[block_row][c].append((local_row, v))
-    
-    # Initialize output arrays
-      # Prefix sum array
-    #all_block_cols = []  # Starting columns for each block
-    
-
-    
-    # # Process each block row
-    # for br in range(block_rows):
-    #     blocks_in_row = 0
-    #     row_block_cols = []
-    #     row_block_vals = []
-        
-    #     # Process each block column in this block row
-    #     for bc in range(block_cols):
-    #         key = (br, bc)
-    #         if key in blocks:
-    #             blocks_in_row += 1
-    #             row_block_cols.append(bc * BLOCK_K)  # Starting column index
-                
-    #             # Create dense block with zero padding
-    #             block_data = np.zeros((BLOCK_M, BLOCK_K), dtype=np.float16)
-                
-    #             # Fill non-zero elements
-    #             for lr, lc, val in blocks[key]:
-    #                 # Only fill if within original matrix bounds
-    #                 global_row = br * BLOCK_M + lr
-    #                 global_col = bc * BLOCK_K + lc
-    #                 if global_row < M and global_col < K:
-    #                     block_data[lr, lc] = np.float16(val)
-                
-    #             # Flatten in row-major order
-    #             row_block_vals.append(block_data.flatten())
-        
-    #     # Update prefix sum
-    #     row_ptr.append(row_ptr[-1] + blocks_in_row)
-    #     # Append row data to global arrays
-    #     if row_block_cols:
-    #         all_block_cols.extend(row_block_cols)
-    #         all_block_vals.extend(row_block_vals)
     
     # Convert to numpy arrays
     rw_ptr_np = np.array(rw_partition, dtype=np.int32)
@@ -467,7 +411,7 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
     # Save B and golden
     b_pad.tofile(os.path.join(output_dir, 'x2_gm.bin'))
     golden.tofile(os.path.join(output_dir, 'golden.bin'))
-    nozero_rate=round(nnz/(TCcount*BLOCK_M*BLOCK_K),2)
+    mean_nnz=round(nnz/(TCcount*BLOCK_M*BLOCK_K),2)*BLOCK_M*BLOCK_K
     # Save metadata
     with open(os.path.join(output_dir, 'block_info.txt'), 'w') as f:
         f.write(f"BLOCK_M={BLOCK_M}\n")
@@ -480,7 +424,7 @@ def parse_mtx_to_bcsr_colcondense(file_path, BLOCK_M=16, BLOCK_K=16):
         f.write(f"Total_values_stored={len(values_np)}\n")
     
     # Print dimensions for calling script
-    print(f"{M_pad} {K_pad} {N_pad} {nnz} {block_rows} {TCcount} {nozero_rate}")
+    print(f"{M_pad} {K_pad} {N_pad} {nnz} {block_rows} {TCcount} {mean_nnz} {con_thres}")
 
 def coo_to_csr(rows,cols,values,rowlen):
     csr_row_ptr=np.array([0 for i in range(rowlen+1)])
@@ -506,4 +450,4 @@ if __name__ == "__main__":
         sys.exit(1)
 
     mtx_file = sys.argv[1]
-    parse_mtx_to_bcsr_colcondense(mtx_file)
+    parse_mtx_to_bcsr_colcondense(mtx_file,con_thres=4)

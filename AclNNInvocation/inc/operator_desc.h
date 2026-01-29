@@ -38,7 +38,7 @@ struct OperatorDesc {
      * @return OperatorDesc
      */
     OperatorDesc &AddInputTensorDesc(aclDataType dataType, int numDims, const int64_t *dims, aclFormat format);
-
+    OperatorDesc& AddAttr(void* attr);
     /**
      * Add an output tensor description
      * @param [in] dataType: data type
@@ -53,12 +53,16 @@ struct OperatorDesc {
     {
         numInputArray = num;
     }
-
+    void SetAttrNum(size_t num){
+        numAttr=num;
+    }
     std::string opType;
     std::vector<aclTensorDesc *> inputDesc;
     std::vector<aclTensorDesc *> outputDesc;
+    std::vector<void *> attrDesc;
     // no acl array descriptions
     size_t numInputArray = 0;
+    size_t numAttr=0;
 };
 
 #endif // OPERATOR_DESC_H

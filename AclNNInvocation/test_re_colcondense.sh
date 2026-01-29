@@ -39,17 +39,11 @@ function main {
     echo "[INFO]: Make success!"
     cd $CURRENT_DIR
 
-    # 设置优化测试结果输出目录
-    OUTPUT_DIR_NAME="output_all"
-    TIMER_PATH="src/timer.cpp"
-    # 修改timer 输出目录
-    # std::string filePath = "../output/" + category + ".txt";
-    #sed -i "s|output/|$OUTPUT_DIR_NAME/|g" $TIMER_PATH
     # 定义输入输出目录
-    INPUTS_DIR="../temp_input_copy"
+    INPUTS_DIR="../temp_input_ggt"
     # INPUTS_DIR="../inputs_all"
     OUTPUT_DIR="../output_all"
-    MODE="default"
+    MODE="reorder_condense"
     # INPUTS_DIR="/root/autodl-tmp/MatmulInvocationNeo_v1/inputs"
     # OUTPUT_DIR="../output"
     # 时间测试记录在 '../output' 目录下，详情见 './src/main.cpp'
@@ -65,32 +59,35 @@ function main {
     for mtx_file in $(find $INPUTS_DIR -name "*.mtx"); do
         sample_name=$(basename $mtx_file .mtx)
         category_dir=$(dirname $mtx_file)
-        sample_dir="$category_dir/$sample_name"
+        sample_dir="$category_dir/${sample_name}_re_colcondense"
         
         echo "==================== Running test for $sample_name ===================="
 
         # 3. 解析矩阵维度
-        dims=$(python3 scripts/parse_matrix.py $mtx_file)
+        dims=$(python3 scripts/parse_matrix_copy_reorder.py $mtx_file)
         if [ $? -ne 0 ]; then
             echo "[ERROR]: Failed to parse matrix dimensions for $mtx_file"
             continue
         fi
-        read -r m k n nnz window_num block_num mean_nnz<<< "$dims"
+        read -r m k n nnz window_num block_num mean_nnz con_thres<<< "$dims"
         echo "[INFO]: Matrix dimensions (M, K, N, NNZ): $m, $k, $n, $nnz"
-        echo "[INFO]: Block info (WindowNum, BlockNum, Mean_nnz): $window_num, $block_num,$mean_nnz"
+        echo "[INFO]: Block info (WindowNum, BlockNum, Mean_nnz, Con_thres): $window_num, $block_num, $mean_nnz, $con_thres"
 
         # 4. 定义输入输出文件路径
-        input_row_ptr="$sample_dir/row_ptr.bin"
-        input_col="$sample_dir/col_idx.bin"
+        input_row_ptr="$sample_dir/rw_ptr.bin"
+        input_col="$sample_dir/TC_col_ref.bin"
         input_values="$sample_dir/values.bin"
+        input_ref="$sample_dir/reorder_ref.bin"
         input_b="$sample_dir/x2_gm.bin"
         output_c="$OUTPUT_DIR/${sample_name}_output_c.bin"
 
         # 5. 运行可执行文件并计时
         export LD_LIBRARY_PATH=$_ASCEND_INSTALL_PATH/opp/vendors/customize/op_api/lib:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=${_ASCEND_INSTALL_PATH}/tools/simulator/Ascend910B2/lib:$LD_LIBRARY_PATH 
         # echo "[INFO]: Execute op for $sample_name!"
         category=$(basename $category_dir)
-        ./output/execute_spmm_op $m $k $n $window_num $block_num $input_row_ptr $input_col $input_values $input_b $output_c $category $sample_name $MODE
+        #msprof op simulator --output=./msprof_out
+        msprof op  --output=./msprof_out ./output/execute_spmm_op $m $k $n $window_num $block_num $input_row_ptr $input_col $input_values $input_b $output_c $category $sample_name $MODE $input_ref $con_thres
         if [ $? -ne 0 ]; then
             echo "[ERROR]: Acl executable run failed for sample $sample_name!"
             continue
@@ -100,7 +97,7 @@ function main {
         golden_bin="$sample_dir/golden.bin"
         if [ -f "$golden_bin" ]; then
             # python3 scripts/verify_result.py $output_c $golden_bin > /dev/null 2>&1
-            python3 scripts/verify_result.py $output_c $golden_bin > "$OUTPUT_DIR/${sample_name}_wrong_indices"
+            python3 scripts/verify_result.py $output_c $golden_bin $m $n $OUTPUT_DIR $sample_name > "$OUTPUT_DIR/${sample_name}_wrong_indices"
             if [ $? -ne 0 ]; then
                 echo "[ERROR]: Verify result failed for sample $sample_name!"
                 echo "[$sample_name] (M, K, N, NNZ): $m, $k, $n, $nnz" >> $FAILURE_LOG
@@ -111,23 +108,13 @@ function main {
             echo "[WARN]: golden.bin not found for sample $sample_name. Skipping verification."
         fi
 
-        # 7. 删除输出文件以节省空间
-        # rm $output_c $input_row_indices $input_col_indices $input_values
+        # #7. 删除输出文件以节省空间
+        # rm -r $output_c "$OUTPUT_DIR/${sample_name}_wrong_indices"
         # echo "[INFO]: Removed output file and temp file"
 
-        echo "==================== Finished test for $sample_name ===================="
-        echo ""
+        # echo "==================== Finished test for $sample_name ===================="
+        # echo ""
     done
-
-    # 8.执行时间分析脚本
-    # copy result to script dir for time analysis
-    # cp "$OUTPUT_DIR/Bai.txt" ../scripts/
-    # (
-    #     cd ../scripts/
-    #     python3 ./calculate_average_time.py
-    # )
-    # 9. 还原timer.cpp
-    #sed -i "s|$OUTPUT_DIR_NAME/|output/|g" $TIMER_PATH
 }
 
 main

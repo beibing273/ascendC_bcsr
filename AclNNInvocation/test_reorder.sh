@@ -69,9 +69,9 @@ function main {
             echo "[ERROR]: Failed to parse matrix dimensions for $mtx_file"
             continue
         fi
-        read -r m k n nnz window_num block_num nozero_rate<<< "$dims"
+        read -r m k n nnz window_num block_num mean_nnz<<< "$dims"
         echo "[INFO]: Matrix dimensions (M, K, N, NNZ): $m, $k, $n, $nnz"
-        echo "[INFO]: Block info (WindowNum, BlockNum, Nozero_rate): $window_num, $block_num, $nozero_rate"
+        echo "[INFO]: Block info (WindowNum, BlockNum, Mean_nnz): $window_num, $block_num, $mean_nnz"
 
         # 4. 定义输入输出文件路径
         input_row_ptr="$sample_dir/row_ptr.bin"

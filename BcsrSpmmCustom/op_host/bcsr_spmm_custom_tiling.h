@@ -1,12 +1,13 @@
 
 #include "register/tilingdata_base.h"
+#include <stdint.h>
 
 namespace optiling {
 BEGIN_TILING_DATA_DEF(BcsrSpmmCustomTilingData)
   TILING_DATA_FIELD_DEF(int32_t, M);
   TILING_DATA_FIELD_DEF(int32_t, N);
   TILING_DATA_FIELD_DEF(int32_t, K);
-
+  TILING_DATA_FIELD_DEF(int32_t, con_thres);
   // 行窗口总数
   TILING_DATA_FIELD_DEF(uint32_t, totalLength);
 

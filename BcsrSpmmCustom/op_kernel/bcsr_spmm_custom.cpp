@@ -14,8 +14,8 @@ public:
     __aicore__ inline void Init(
         GM_ADDR a_shape,
         GM_ADDR row_ptr, GM_ADDR col, GM_ADDR val,
-        GM_ADDR b, GM_ADDR c, GM_ADDR workspace,
-        int32_t M, int32_t N, int32_t K,
+        GM_ADDR b, GM_ADDR c,GM_ADDR workspace,
+        int32_t M, int32_t N, int32_t K,int32_t attr_con_thres,
         uint32_t formerNum, uint32_t formerLength,
         uint32_t tailNum, uint32_t tailLength,
         uint32_t lastKLength
@@ -26,6 +26,8 @@ public:
         this->M = M;
         this->K = K;
         this->N = N;
+        this->con_thres=attr_con_thres;
+        this->CUBE_BLOCK_K_TILE=CUBE_BLOCK_K/this->con_thres;
         this->lastKLength = lastKLength;
         if (AscendC::GetBlockIdx() < formerNum) {
             this->rowWindowNum = formerLength;
@@ -45,8 +47,8 @@ public:
         // colGm.SetGlobalBuffer((__gm__ int32_t *)col + rowPtrGm.GetValue(0), 
         //     rowPtrGm.GetValue(this->rowWindowNum) - rowPtrGm.GetValue(0)
         // ); 
-        colGm.SetGlobalBuffer((__gm__ int32_t *)col + rowPtrGm.GetValue(0)*CUBE_BLOCK_K, 
-            (rowPtrGm.GetValue(this->rowWindowNum) - rowPtrGm.GetValue(0))*CUBE_BLOCK_K
+        colGm.SetGlobalBuffer((__gm__ int32_t *)col + rowPtrGm.GetValue(0)*CUBE_BLOCK_K_TILE, 
+            (rowPtrGm.GetValue(this->rowWindowNum) - rowPtrGm.GetValue(0))*CUBE_BLOCK_K_TILE
         );
         valGm.SetGlobalBuffer((__gm__ aType *)val + CUBE_BLOCK_SIZE * rowPtrGm.GetValue(0),
             CUBE_BLOCK_SIZE * (rowPtrGm.GetValue(this->rowWindowNum) - rowPtrGm.GetValue(0))
@@ -54,13 +56,13 @@ public:
         //每个核都需要获得完整的B矩阵
         bGm.SetGlobalBuffer((__gm__ bType *)b, (uint64_t)K * N);
             
-        pipe.InitBuffer(inQueueA1, 2, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
-        pipe.InitBuffer(inQueueA2, 2, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
-        pipe.InitBuffer(inQueueB1, 2, CUBE_BLOCK_K * this->N * sizeof(bType));
+        pipe.InitBuffer(inQueueA1, 1, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
+        pipe.InitBuffer(inQueueA2, 1, CUBE_BLOCK_SIZE * sizeof(aType)); // 512B
+        pipe.InitBuffer(inQueueB1, 1, CUBE_BLOCK_K * this->N * sizeof(bType));
         //pipe.InitBuffer(inQueueB2, 1, CUBE_BLOCK_K * this->N * sizeof(bType));
-        pipe.InitBuffer(inQueueB2, 2, CUBE_BLOCK_K *N* sizeof(bType));
+        pipe.InitBuffer(inQueueB2, 1, CUBE_BLOCK_K *N* sizeof(bType));
         //pipe.InitBuffer(outQueueCO1, 1, CUBE_BLOCK_M * this->N  * sizeof(cType));
-        pipe.InitBuffer(outQueueCO1, 2, CUBE_BLOCK_M * N * sizeof(cType));
+        pipe.InitBuffer(outQueueCO1, 1, CUBE_BLOCK_M * N * sizeof(cType));
         // pipe.InitBuffer(rowBQueue,1,CUBE_BLOCK_K*sizeof(idxType));
     }
 
@@ -156,21 +158,31 @@ private:
     __aicore__ inline void CopyInB(int32_t row,int32_t i) {
 
            
-        AscendC::LocalTensor<bType> b1local=inQueueB1.AllocTensor<bType>();
-        AscendC::DataCopyParams b1param;
-        b1param.blockCount=N/CUBE_BLOCK_N;
-        b1param.blockLen=CUBE_BLOCK_N*sizeof(bType)/32;
-        b1param.srcStride=0;
-        //copy同时进行ND->NZ转换A
-        b1param.dstStride=(CUBE_BLOCK_K-1)*CUBE_BLOCK_N*sizeof(bType)/32;
-        for(int j=0;j<CUBE_BLOCK_K;++j){
-            int row_index = colGm.GetValue((rowPtrGm(row)-rowPtrGm(0)+i)*CUBE_BLOCK_K+j);
-           //AscendC::printf("第%d次对应B的第%d行\n",j,row_index);
-            DataCopy(b1local[j*CUBE_BLOCK_N],bGm[row_index*N],b1param);
+        AscendC::LocalTensor<bType> b1Local=inQueueB1.AllocTensor<bType>();
+        // AscendC::DataCopyParams b1param;
+        // b1param.blockCount=N/CUBE_BLOCK_N;
+        // b1param.blockLen=CUBE_BLOCK_N*sizeof(bType)/32;
+        // b1param.srcStride=0;
+        // //copy同时进行ND->NZ转换A
+        // b1param.dstStride=(CUBE_BLOCK_K-1)*CUBE_BLOCK_N*sizeof(bType)/32;
+        //可以使用ND2NZ连续加载4行B
+        AscendC::Nd2NzParams b1param;
+        b1param.ndNum=1;
+        b1param.nValue=con_thres;
+        b1param.dValue=N;
+        b1param.srcNdMatrixStride=0;
+        b1param.srcDValue=N;
+        b1param.dstNzC0Stride=CUBE_BLOCK_K*CUBE_BLOCK_N*sizeof(bType)/32;
+        b1param.dstNzNStride=CUBE_BLOCK_N*sizeof(bType)/32;
+        b1param.dstNzMatrixStride=CUBE_BLOCK_K*CUBE_BLOCK_N;
+        for(int j=0;j<CUBE_BLOCK_K_TILE;++j){
+            int row_index = colGm.GetValue((rowPtrGm(row)-rowPtrGm(0)+i)*CUBE_BLOCK_K_TILE+j)*this->con_thres;
+            DataCopy(b1Local[j*this->con_thres*CUBE_BLOCK_N],bGm[row_index*N],b1param);
           
         }
-        inQueueB1.EnQue<bType>(b1local);
-
+        inQueueB1.EnQue<bType>(b1Local);
+        // AscendC::printf("now will print B\n");
+        // AscendC::DumpTensor(b1Local,0,CUBE_BLOCK_K*N);
         // rowBQueue.FreeTensor(idxBlocal);
     }
 
@@ -250,6 +262,8 @@ private:
         params.n = N;
         AscendC::Mmad(c1Local, a2Local, b2Local, params);
         outQueueCO1.EnQue<cType>(c1Local);
+        //AscendC::printf("now will print C1Local\n");
+        //AscendC::DumpTensor(c1Local,0,CUBE_BLOCK_M*N);
         inQueueA2.FreeTensor(a2Local);
         inQueueB2.FreeTensor(b2Local);
     }
@@ -323,6 +337,8 @@ private:
     int32_t M;
     int32_t K;
     int32_t N;
+    int32_t CUBE_BLOCK_K_TILE;
+    int32_t con_thres;
     uint32_t rowWindowNum;
     uint32_t mmadCubeBlockNum;
     uint32_t lastKLength;
@@ -338,7 +354,7 @@ extern "C" __global__ __aicore__ void bcsr_spmm_custom(
 
     BcsrSpmmKernel<half, half, float,int32_t> op;
     op.Init(a_shape, row_ptr, col, val, b, c, workspace,
-        tiling_data.M, tiling_data.N, tiling_data.K,
+        tiling_data.M, tiling_data.N, tiling_data.K,tiling_data.con_thres,
         tiling_data.formerNum, tiling_data.formerLength,
         tiling_data.tailNum, tiling_data.tailLength,
         tiling_data.lastKLength

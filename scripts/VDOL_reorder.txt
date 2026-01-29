@@ -1,0 +1,637 @@
+Sample: dynamicSoaringProblem_1_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.651359 ms
+  opRunner.RunOp:
+    Run 1: 590.302180 ms
+Local datetime at test execution: 2026:1:27 12:17:21
+----------------------------------------
+Sample: dynamicSoaringProblem_2_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.655579 ms
+  opRunner.RunOp:
+    Run 1: 605.993100 ms
+Local datetime at test execution: 2026:1:27 12:17:24
+----------------------------------------
+Sample: dynamicSoaringProblem_3_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.737759 ms
+  opRunner.RunOp:
+    Run 1: 585.861116 ms
+Local datetime at test execution: 2026:1:27 12:17:27
+----------------------------------------
+Sample: dynamicSoaringProblem_4_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.736048 ms
+  opRunner.RunOp:
+    Run 1: 544.421251 ms
+Local datetime at test execution: 2026:1:27 12:17:30
+----------------------------------------
+Sample: dynamicSoaringProblem_5_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.604859 ms
+  opRunner.RunOp:
+    Run 1: 521.349395 ms
+Local datetime at test execution: 2026:1:27 12:17:33
+----------------------------------------
+Sample: dynamicSoaringProblem_6_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.739678 ms
+  opRunner.RunOp:
+    Run 1: 550.545083 ms
+Local datetime at test execution: 2026:1:27 12:17:36
+----------------------------------------
+Sample: dynamicSoaringProblem_7_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.738908 ms
+  opRunner.RunOp:
+    Run 1: 566.463292 ms
+Local datetime at test execution: 2026:1:27 12:17:39
+----------------------------------------
+Sample: dynamicSoaringProblem_8_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.762308 ms
+  opRunner.RunOp:
+    Run 1: 575.088819 ms
+Local datetime at test execution: 2026:1:27 12:17:42
+----------------------------------------
+Sample: freeFlyingRobot_10_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.837218 ms
+  opRunner.RunOp:
+    Run 1: 572.012983 ms
+Local datetime at test execution: 2026:1:27 12:17:46
+----------------------------------------
+Sample: freeFlyingRobot_11_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.825648 ms
+  opRunner.RunOp:
+    Run 1: 533.960383 ms
+Local datetime at test execution: 2026:1:27 12:17:49
+----------------------------------------
+Sample: freeFlyingRobot_12_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.814778 ms
+  opRunner.RunOp:
+    Run 1: 557.586753 ms
+Local datetime at test execution: 2026:1:27 12:17:53
+----------------------------------------
+Sample: freeFlyingRobot_13_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.839998 ms
+  opRunner.RunOp:
+    Run 1: 535.989262 ms
+Local datetime at test execution: 2026:1:27 12:17:56
+----------------------------------------
+Sample: freeFlyingRobot_14_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.870348 ms
+  opRunner.RunOp:
+    Run 1: 544.478800 ms
+Local datetime at test execution: 2026:1:27 12:17:59
+----------------------------------------
+Sample: freeFlyingRobot_15_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.872738 ms
+  opRunner.RunOp:
+    Run 1: 571.558202 ms
+Local datetime at test execution: 2026:1:27 12:18:2
+----------------------------------------
+Sample: freeFlyingRobot_16_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.816808 ms
+  opRunner.RunOp:
+    Run 1: 533.156103 ms
+Local datetime at test execution: 2026:1:27 12:18:5
+----------------------------------------
+Sample: freeFlyingRobot_1_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.664728 ms
+  opRunner.RunOp:
+    Run 1: 529.938779 ms
+Local datetime at test execution: 2026:1:27 12:18:8
+----------------------------------------
+Sample: freeFlyingRobot_2_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.769998 ms
+  opRunner.RunOp:
+    Run 1: 548.887470 ms
+Local datetime at test execution: 2026:1:27 12:18:11
+----------------------------------------
+Sample: freeFlyingRobot_3_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.802938 ms
+  opRunner.RunOp:
+    Run 1: 546.482934 ms
+Local datetime at test execution: 2026:1:27 12:18:14
+----------------------------------------
+Sample: freeFlyingRobot_4_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.727359 ms
+  opRunner.RunOp:
+    Run 1: 570.973931 ms
+Local datetime at test execution: 2026:1:27 12:18:17
+----------------------------------------
+Sample: freeFlyingRobot_5_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.765368 ms
+  opRunner.RunOp:
+    Run 1: 553.043963 ms
+Local datetime at test execution: 2026:1:27 12:18:20
+----------------------------------------
+Sample: freeFlyingRobot_6_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.777078 ms
+  opRunner.RunOp:
+    Run 1: 525.833038 ms
+Local datetime at test execution: 2026:1:27 12:18:23
+----------------------------------------
+Sample: freeFlyingRobot_7_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.764418 ms
+  opRunner.RunOp:
+    Run 1: 566.491616 ms
+Local datetime at test execution: 2026:1:27 12:18:26
+----------------------------------------
+Sample: freeFlyingRobot_8_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.792588 ms
+  opRunner.RunOp:
+    Run 1: 528.629588 ms
+Local datetime at test execution: 2026:1:27 12:18:29
+----------------------------------------
+Sample: freeFlyingRobot_9_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.814438 ms
+  opRunner.RunOp:
+    Run 1: 539.678368 ms
+Local datetime at test execution: 2026:1:27 12:18:32
+----------------------------------------
+Sample: goddardRocketProblem_1_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.569649 ms
+  opRunner.RunOp:
+    Run 1: 574.444630 ms
+Local datetime at test execution: 2026:1:27 12:18:35
+----------------------------------------
+Sample: goddardRocketProblem_2_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.773828 ms
+  opRunner.RunOp:
+    Run 1: 545.233710 ms
+Local datetime at test execution: 2026:1:27 12:18:38
+----------------------------------------
+Sample: hangGlider_1_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.653029 ms
+  opRunner.RunOp:
+    Run 1: 603.487553 ms
+Local datetime at test execution: 2026:1:27 12:18:42
+----------------------------------------
+Sample: hangGlider_2_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.712438 ms
+  opRunner.RunOp:
+    Run 1: 580.635738 ms
+Local datetime at test execution: 2026:1:27 12:18:45
+----------------------------------------
+Sample: hangGlider_3_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.141767 ms
+  opRunner.RunOp:
+    Run 1: 586.812630 ms
+Local datetime at test execution: 2026:1:27 12:18:48
+----------------------------------------
+Sample: hangGlider_4_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.305386 ms
+  opRunner.RunOp:
+    Run 1: 545.050002 ms
+Local datetime at test execution: 2026:1:27 12:18:52
+----------------------------------------
+Sample: hangGlider_5_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.299347 ms
+  opRunner.RunOp:
+    Run 1: 520.515781 ms
+Local datetime at test execution: 2026:1:27 12:18:55
+----------------------------------------
+Sample: kineticBatchReactor_1_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.744119 ms
+  opRunner.RunOp:
+    Run 1: 532.227429 ms
+Local datetime at test execution: 2026:1:27 12:18:58
+----------------------------------------
+Sample: kineticBatchReactor_2_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.794868 ms
+  opRunner.RunOp:
+    Run 1: 575.266819 ms
+Local datetime at test execution: 2026:1:27 12:19:1
+----------------------------------------
+Sample: kineticBatchReactor_3_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.801828 ms
+  opRunner.RunOp:
+    Run 1: 560.782324 ms
+Local datetime at test execution: 2026:1:27 12:19:4
+----------------------------------------
+Sample: kineticBatchReactor_4_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.841098 ms
+  opRunner.RunOp:
+    Run 1: 541.933089 ms
+Local datetime at test execution: 2026:1:27 12:19:7
+----------------------------------------
+Sample: kineticBatchReactor_5_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.841348 ms
+  opRunner.RunOp:
+    Run 1: 528.881560 ms
+Local datetime at test execution: 2026:1:27 12:19:10
+----------------------------------------
+Sample: kineticBatchReactor_6_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.905007 ms
+  opRunner.RunOp:
+    Run 1: 520.046141 ms
+Local datetime at test execution: 2026:1:27 12:19:13
+----------------------------------------
+Sample: kineticBatchReactor_7_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.080637 ms
+  opRunner.RunOp:
+    Run 1: 547.919518 ms
+Local datetime at test execution: 2026:1:27 12:19:16
+----------------------------------------
+Sample: kineticBatchReactor_8_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.849268 ms
+  opRunner.RunOp:
+    Run 1: 512.200717 ms
+Local datetime at test execution: 2026:1:27 12:19:20
+----------------------------------------
+Sample: kineticBatchReactor_9_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.882048 ms
+  opRunner.RunOp:
+    Run 1: 511.072037 ms
+Local datetime at test execution: 2026:1:27 12:19:23
+----------------------------------------
+Sample: lowThrust_10_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.857398 ms
+  opRunner.RunOp:
+    Run 1: 568.946768 ms
+Local datetime at test execution: 2026:1:27 12:19:27
+----------------------------------------
+Sample: lowThrust_11_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.841858 ms
+  opRunner.RunOp:
+    Run 1: 543.824529 ms
+Local datetime at test execution: 2026:1:27 12:19:31
+----------------------------------------
+Sample: lowThrust_12_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.919288 ms
+  opRunner.RunOp:
+    Run 1: 552.032297 ms
+Local datetime at test execution: 2026:1:27 12:19:34
+----------------------------------------
+Sample: lowThrust_13_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.914488 ms
+  opRunner.RunOp:
+    Run 1: 551.529126 ms
+Local datetime at test execution: 2026:1:27 12:19:37
+----------------------------------------
+Sample: lowThrust_1_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.607329 ms
+  opRunner.RunOp:
+    Run 1: 537.942178 ms
+Local datetime at test execution: 2026:1:27 12:19:41
+----------------------------------------
+Sample: lowThrust_2_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.691768 ms
+  opRunner.RunOp:
+    Run 1: 534.470175 ms
+Local datetime at test execution: 2026:1:27 12:19:44
+----------------------------------------
+Sample: lowThrust_3_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.703808 ms
+  opRunner.RunOp:
+    Run 1: 544.973597 ms
+Local datetime at test execution: 2026:1:27 12:19:47
+----------------------------------------
+Sample: lowThrust_4_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.849188 ms
+  opRunner.RunOp:
+    Run 1: 582.695079 ms
+Local datetime at test execution: 2026:1:27 12:19:50
+----------------------------------------
+Sample: lowThrust_5_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.957608 ms
+  opRunner.RunOp:
+    Run 1: 575.910354 ms
+Local datetime at test execution: 2026:1:27 12:19:53
+----------------------------------------
+Sample: lowThrust_6_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.876588 ms
+  opRunner.RunOp:
+    Run 1: 536.108334 ms
+Local datetime at test execution: 2026:1:27 12:19:56
+----------------------------------------
+Sample: lowThrust_7_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.938538 ms
+  opRunner.RunOp:
+    Run 1: 518.744628 ms
+Local datetime at test execution: 2026:1:27 12:19:59
+----------------------------------------
+Sample: lowThrust_8_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.878598 ms
+  opRunner.RunOp:
+    Run 1: 544.820378 ms
+Local datetime at test execution: 2026:1:27 12:20:2
+----------------------------------------
+Sample: lowThrust_9_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 1.099398 ms
+  opRunner.RunOp:
+    Run 1: 574.411050 ms
+Local datetime at test execution: 2026:1:27 12:20:5
+----------------------------------------
+Sample: orbitRaising_1_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.611128 ms
+  opRunner.RunOp:
+    Run 1: 565.517241 ms
+Local datetime at test execution: 2026:1:27 12:20:9
+----------------------------------------
+Sample: orbitRaising_2_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.620268 ms
+  opRunner.RunOp:
+    Run 1: 517.962092 ms
+Local datetime at test execution: 2026:1:27 12:20:12
+----------------------------------------
+Sample: orbitRaising_3_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.775178 ms
+  opRunner.RunOp:
+    Run 1: 519.308377 ms
+Local datetime at test execution: 2026:1:27 12:20:15
+----------------------------------------
+Sample: orbitRaising_4_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.632048 ms
+  opRunner.RunOp:
+    Run 1: 566.316034 ms
+Local datetime at test execution: 2026:1:27 12:20:18
+----------------------------------------
+Sample: reorientation_1_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.727208 ms
+  opRunner.RunOp:
+    Run 1: 549.639566 ms
+Local datetime at test execution: 2026:1:27 12:20:21
+----------------------------------------
+Sample: reorientation_2_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.758438 ms
+  opRunner.RunOp:
+    Run 1: 600.594961 ms
+Local datetime at test execution: 2026:1:27 12:20:24
+----------------------------------------
+Sample: reorientation_3_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.839218 ms
+  opRunner.RunOp:
+    Run 1: 569.868270 ms
+Local datetime at test execution: 2026:1:27 12:20:27
+----------------------------------------
+Sample: reorientation_4_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.787208 ms
+  opRunner.RunOp:
+    Run 1: 546.869118 ms
+Local datetime at test execution: 2026:1:27 12:20:30
+----------------------------------------
+Sample: reorientation_5_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.782048 ms
+  opRunner.RunOp:
+    Run 1: 581.257036 ms
+Local datetime at test execution: 2026:1:27 12:20:33
+----------------------------------------
+Sample: reorientation_6_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.800567 ms
+  opRunner.RunOp:
+    Run 1: 561.355097 ms
+Local datetime at test execution: 2026:1:27 12:20:36
+----------------------------------------
+Sample: reorientation_7_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.750058 ms
+  opRunner.RunOp:
+    Run 1: 533.614627 ms
+Local datetime at test execution: 2026:1:27 12:20:40
+----------------------------------------
+Sample: reorientation_8_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.792867 ms
+  opRunner.RunOp:
+    Run 1: 655.600526 ms
+Local datetime at test execution: 2026:1:27 12:20:43
+----------------------------------------
+Sample: spaceShuttleEntry_1_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.626338 ms
+  opRunner.RunOp:
+    Run 1: 538.844600 ms
+Local datetime at test execution: 2026:1:27 12:20:46
+----------------------------------------
+Sample: spaceShuttleEntry_2_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.690458 ms
+  opRunner.RunOp:
+    Run 1: 519.096210 ms
+Local datetime at test execution: 2026:1:27 12:20:49
+----------------------------------------
+Sample: spaceShuttleEntry_3_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.901718 ms
+  opRunner.RunOp:
+    Run 1: 567.372321 ms
+Local datetime at test execution: 2026:1:27 12:20:52
+----------------------------------------
+Sample: spaceShuttleEntry_4_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.753188 ms
+  opRunner.RunOp:
+    Run 1: 541.982396 ms
+Local datetime at test execution: 2026:1:27 12:20:55
+----------------------------------------
+Sample: spaceStation_10_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.725738 ms
+  opRunner.RunOp:
+    Run 1: 534.798615 ms
+Local datetime at test execution: 2026:1:27 12:20:58
+----------------------------------------
+Sample: spaceStation_11_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.604728 ms
+  opRunner.RunOp:
+    Run 1: 538.360974 ms
+Local datetime at test execution: 2026:1:27 12:21:1
+----------------------------------------
+Sample: spaceStation_12_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.720398 ms
+  opRunner.RunOp:
+    Run 1: 520.739158 ms
+Local datetime at test execution: 2026:1:27 12:21:4
+----------------------------------------
+Sample: spaceStation_13_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.711628 ms
+  opRunner.RunOp:
+    Run 1: 535.704828 ms
+Local datetime at test execution: 2026:1:27 12:21:7
+----------------------------------------
+Sample: spaceStation_14_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.750918 ms
+  opRunner.RunOp:
+    Run 1: 538.414508 ms
+Local datetime at test execution: 2026:1:27 12:21:11
+----------------------------------------
+Sample: spaceStation_1_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.661798 ms
+  opRunner.RunOp:
+    Run 1: 535.868834 ms
+Local datetime at test execution: 2026:1:27 12:21:14
+----------------------------------------
+Sample: spaceStation_2_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.609628 ms
+  opRunner.RunOp:
+    Run 1: 543.308292 ms
+Local datetime at test execution: 2026:1:27 12:21:18
+----------------------------------------
+Sample: spaceStation_3_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.614098 ms
+  opRunner.RunOp:
+    Run 1: 532.681908 ms
+Local datetime at test execution: 2026:1:27 12:21:21
+----------------------------------------
+Sample: spaceStation_4_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.613468 ms
+  opRunner.RunOp:
+    Run 1: 520.842529 ms
+Local datetime at test execution: 2026:1:27 12:21:24
+----------------------------------------
+Sample: spaceStation_5_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.638828 ms
+  opRunner.RunOp:
+    Run 1: 511.800241 ms
+Local datetime at test execution: 2026:1:27 12:21:27
+----------------------------------------
+Sample: spaceStation_6_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.788698 ms
+  opRunner.RunOp:
+    Run 1: 561.082749 ms
+Local datetime at test execution: 2026:1:27 12:21:30
+----------------------------------------
+Sample: spaceStation_7_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.709389 ms
+  opRunner.RunOp:
+    Run 1: 532.782622 ms
+Local datetime at test execution: 2026:1:27 12:21:33
+----------------------------------------
+Sample: spaceStation_8_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.764848 ms
+  opRunner.RunOp:
+    Run 1: 527.883674 ms
+Local datetime at test execution: 2026:1:27 12:21:36
+----------------------------------------
+Sample: spaceStation_9_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.714548 ms
+  opRunner.RunOp:
+    Run 1: 539.737841 ms
+Local datetime at test execution: 2026:1:27 12:21:39
+----------------------------------------
+Sample: tumorAntiAngiogenesis_1_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.621748 ms
+  opRunner.RunOp:
+    Run 1: 570.078379 ms
+Local datetime at test execution: 2026:1:27 12:21:42
+----------------------------------------
+Sample: tumorAntiAngiogenesis_2_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.679748 ms
+  opRunner.RunOp:
+    Run 1: 535.682409 ms
+Local datetime at test execution: 2026:1:27 12:21:45
+----------------------------------------
+Sample: tumorAntiAngiogenesis_3_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.610828 ms
+  opRunner.RunOp:
+    Run 1: 534.494681 ms
+Local datetime at test execution: 2026:1:27 12:21:48
+----------------------------------------
+Sample: tumorAntiAngiogenesis_4_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.583448 ms
+  opRunner.RunOp:
+    Run 1: 578.686131 ms
+Local datetime at test execution: 2026:1:27 12:21:51
+----------------------------------------
+Sample: tumorAntiAngiogenesis_5_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.623568 ms
+  opRunner.RunOp:
+    Run 1: 533.720251 ms
+Local datetime at test execution: 2026:1:27 12:21:54
+----------------------------------------
+Sample: tumorAntiAngiogenesis_6_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.589249 ms
+  opRunner.RunOp:
+    Run 1: 533.582189 ms
+Local datetime at test execution: 2026:1:27 12:21:57
+----------------------------------------
+Sample: tumorAntiAngiogenesis_7_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.967327 ms
+  opRunner.RunOp:
+    Run 1: 557.222004 ms
+Local datetime at test execution: 2026:1:27 12:22:0
+----------------------------------------
+Sample: tumorAntiAngiogenesis_8_reorder
+  aclnnBcsrSpmmCustom:
+    Run 1: 0.731800 ms
+  opRunner.RunOp:
+    Run 1: 530.260044 ms
+Local datetime at test execution: 2026:1:27 12:22:3
+----------------------------------------

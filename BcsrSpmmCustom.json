@@ -64,6 +64,14 @@
                     "float"
                 ]
             }
+        ],
+        "attr":[
+            {
+                "name":"con_thres",
+                "param_type":"optional",
+                "type":"int32",
+                "default_value": 1
+            }
         ]
     }
 ]

@@ -28,34 +28,35 @@ int deviceId = 0;
 const int64_t TILE_M = 16;
 const int64_t TILE_K = 16;
 
-OperatorDesc CreateOpDesc(int64_t m, int64_t k, int64_t n, int64_t windowNum, int64_t blockNum)
+OperatorDesc CreateOpDesc(int64_t m, int64_t k, int64_t n, int64_t windowNum, int64_t blockNum,int32_t con_thres)
 {
     // define operator
     std::vector<int64_t> shapeRowPtr{windowNum + 1};
     //std::vector<int64_t> shapeCol{blockNum};
-    std::vector<int64_t> shapeCol{blockNum*TILE_K};
+    std::vector<int64_t> shapeCol{blockNum*TILE_K/con_thres};
     std::vector<int64_t> shapeValues{blockNum * TILE_M * TILE_K};
     std::vector<int64_t> shapeAShape{2};
     std::vector<int64_t> shapeB{k, n};
     std::vector<int64_t> shapeC{m, n};
-
     aclDataType dataTypeIndices = ACL_INT32;
     aclDataType dataTypeValues = ACL_FLOAT16;
     aclDataType dataTypeAShape = ACL_INT64;
     aclDataType dataTypeB = ACL_FLOAT16;
     aclDataType dataTypeC = ACL_FLOAT;
-
+    int32_t* con_thres_ptr=(int32_t*)malloc(sizeof(int32_t));
+    *con_thres_ptr=con_thres;
     aclFormat format = ACL_FORMAT_ND;
 
     OperatorDesc opDesc;
     opDesc.SetInputArrayNum(1);
+    opDesc.SetAttrNum(1);
+    opDesc.AddAttr((void *)con_thres_ptr);
     opDesc.AddInputTensorDesc(dataTypeAShape, shapeAShape.size(), shapeAShape.data(), format);
     opDesc.AddInputTensorDesc(dataTypeIndices, shapeRowPtr.size(), shapeRowPtr.data(), format);
     opDesc.AddInputTensorDesc(dataTypeIndices, shapeCol.size(), shapeCol.data(), format);
     opDesc.AddInputTensorDesc(dataTypeValues, shapeValues.size(), shapeValues.data(), format);
     opDesc.AddInputTensorDesc(dataTypeB, shapeB.size(), shapeB.data(), format);
     opDesc.AddOutputTensorDesc(dataTypeC, shapeC.size(), shapeC.data(), format);
-
     return opDesc;
 }
 
@@ -167,11 +168,10 @@ bool InitResource()
     return true;
 }
 
-bool RunOp(int64_t m, int64_t k, int64_t n, int64_t windowNum, int64_t blockNum, const std::string& rowPtr, const std::string& col, const std::string& values, const std::string reorder_ref, const std::string& b, const std::string& c,const std::string& smode)
+bool RunOp(int64_t m, int64_t k, int64_t n, int64_t windowNum, int64_t blockNum, int32_t con_thres, const std::string& rowPtr, const std::string& col, const std::string& values, const std::string reorder_ref, const std::string& b, const std::string& c,const std::string& smode)
 {
     // create op desc
-    OperatorDesc opDesc = CreateOpDesc(m, k, n, windowNum, blockNum);
-
+    OperatorDesc opDesc = CreateOpDesc(m, k, n, windowNum, blockNum,con_thres);
     // create Runner
     OpRunner opRunner(&opDesc);
     if (!opRunner.Init()) {
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
 {
      if (argc < 14) {
         // std::cerr << "Usage: " << argv[0] << " <M> <K> <N> <NNZ> <row_ptr.bin> <col.bin> <values.bin> <b.bin> <c.bin> <category> <sample_name>" << std::endl;
-        std::cerr << "Usage: " << argv[0] << " <M> <K> <N> <WINDOW_NUM> <BLOCK_NUM> <row_ptr.bin> <col.bin> <values.bin> <b.bin> <c.bin> <category> <sample_name>" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " <M> <K> <N> <WINDOW_NUM> <BLOCK_NUM> <row_ptr.bin> <col.bin> <values.bin> <b.bin> <c.bin> <category> <sample_name> sss" << std::endl;
         return FAILED;
     }
 
@@ -236,19 +236,32 @@ int main(int argc, char **argv)
     std::string sampleName = argv[12];
     std::string smode=argv[13];
     std::string reorder_ref ="";
-    if(smode=="reorder"){
-        reorder_ref=argv[14];
-        if (argc != 15) {
-        // std::cerr << "Usage: " << argv[0] << " <M> <K> <N> <NNZ> <row_ptr.bin> <col.bin> <values.bin> <b.bin> <c.bin> <category> <sample_name>" << std::endl;
-        std::cerr << "Usage: " << argv[0] << " <M> <K> <N> <WINDOW_NUM> <BLOCK_NUM> <row_ptr.bin> <col.bin> <values.bin> <b.bin> <c.bin> <category> <sample_name> <mode> <reorder_ref>" << std::endl;
-          return FAILED;
+    int32_t con_thres=1;
+    if(smode=="reorder_condense"){
+        if (argc != 16) { 
+           std::cerr << "Usage: " << argv[0] << ", smode: "<<smode<<", num of argc is error!" << std::endl;
+           return FAILED;
           }
+          reorder_ref=argv[14];
+          con_thres=std::stoi(argv[15]);
+    }else if(smode=="reorder"){
+        if (argc != 15) { 
+           std::cerr << "Usage: " << argv[0] << ", smode: "<<smode<<", num of argc is error!" << std::endl;
+           return FAILED;
+          }
+        reorder_ref=argv[14];
+    }
+    else if(smode=="condense"){
+        if (argc != 15) { 
+           std::cerr << "Usage: " << argv[0] << ", smode: "<<smode<<", num of argc is error!" << std::endl;
+           return FAILED;
+          }
+        con_thres=std::stoi(argv[14]);
     }else{
-        if (argc != 14) {
-        // std::cerr << "Usage: " << argv[0] << " <M> <K> <N> <NNZ> <row_ptr.bin> <col.bin> <values.bin> <b.bin> <c.bin> <category> <sample_name>" << std::endl;
-        std::cerr << "Usage: " << argv[0] << " <M> <K> <N> <WINDOW_NUM> <BLOCK_NUM> <row_ptr.bin> <col.bin> <values.bin> <b.bin> <c.bin> <category> <sample_name> <mode>" << std::endl;
-        return FAILED;
-        }
+        if (argc != 14) { 
+           std::cerr << "Usage: " << argv[0] << ", smode: "<<smode<<", num of argc is error!" << std::endl;
+           return FAILED;
+          }
     }
     if (!InitResource()) {
         ERROR_LOG("Init resource failed");
@@ -256,7 +269,7 @@ int main(int argc, char **argv)
     }
     // INFO_LOG("Init resource success");
 
-    if (!RunOp(m, k, n, windowNum, blockNum, rowPtr, col, values,reorder_ref, b, c,smode)) {
+    if (!RunOp(m, k, n, windowNum, blockNum, con_thres, rowPtr, col, values,reorder_ref, b, c,smode)) {
         DestroyResource();
         return FAILED;
     }

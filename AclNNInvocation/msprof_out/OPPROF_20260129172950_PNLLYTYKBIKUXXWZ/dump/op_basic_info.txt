@@ -1,0 +1,7 @@
+Op Name=BcsrSpmmCustom_9ff1211f5d2f805e7cbc506cc6f53b15_0
+Block Dim=24
+Run Soc Version=Ascend910B2
+Device Id=0
+Pid=126615
+Current Freq=1800
+Rated Freq=1800

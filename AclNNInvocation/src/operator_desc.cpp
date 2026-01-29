@@ -26,6 +26,10 @@ OperatorDesc::~OperatorDesc()
     }
 }
 
+OperatorDesc& OperatorDesc::AddAttr(void* attr_ptr){
+    attrDesc.emplace_back(attr_ptr);
+    return *this;
+}
 OperatorDesc &OperatorDesc::AddInputTensorDesc(aclDataType dataType, int numDims, const int64_t *dims, aclFormat format)
 {
     aclTensorDesc *desc = aclCreateTensorDesc(dataType, numDims, dims, format);
